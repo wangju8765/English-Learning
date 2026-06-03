@@ -134,6 +134,10 @@ export class DiamondMineEngine implements GameEngine {
     return this.comboCount;
   }
 
+  getCurrentWallIndex(): number {
+    return this.currentWallIndex;
+  }
+
   getMaxCombo(): number {
     return this.maxCombo;
   }

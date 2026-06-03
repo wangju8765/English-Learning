@@ -82,6 +82,7 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
       if (!state || state.found) return;
 
       const responseTimeMs = Date.now() - answerStartRef.current;
+      const wallIndexBefore = engineRef.current.getCurrentWallIndex();
       const result = engineRef.current.submitAnswer(blockWord);
 
       // Update block state
@@ -90,10 +91,9 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
         newStates.set(blockWord, { ...state, found: true, status: 'correct' });
         speakWord(blockWord).catch(() => {});
 
-        // Check if all targets on this wall found
-        const remainingTargets = engineRef.current.getCurrentWall()?.remainingTargets.length ?? 1;
-
-        if (remainingTargets <= 0) {
+        // Check if wall advanced (all targets found on this wall)
+        const wallIndexAfter = engineRef.current.getCurrentWallIndex();
+        if (wallIndexAfter !== wallIndexBefore) {
           // Wall complete — move to next after delay
           setTimeout(() => {
             if (engineRef.current) {
