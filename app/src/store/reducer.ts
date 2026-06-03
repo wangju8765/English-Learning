@@ -72,7 +72,7 @@ export function createInitialState(): AppState {
       lastVocabularyHash: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      schemaVersion: 1,
+      schemaVersion: 2,
     },
     activeSession: null,
   };
@@ -84,6 +84,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'INITIALIZE_STATE': {
       const saved = action.payload;
+      const APP_SCHEMA_VERSION = 2;
+
       // Check if streak should be reset (missed a day)
       const today = getTodayDate();
       let streakDays = saved.player.streakDays;
@@ -99,8 +101,22 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         streakDays = 0;
       }
 
+      // Schema migration: clear stale word data from older versions
+      // v1 → v2: definition field format changed (legacy → YAML), force refresh
+      const wordData = (saved.meta.schemaVersion || 1) < APP_SCHEMA_VERSION
+        ? {} // Clear words — they will be re-imported from vocabulary.json
+        : saved.words;
+
       return {
         ...saved,
+        words: wordData,
+        meta: {
+          ...saved.meta,
+          schemaVersion: APP_SCHEMA_VERSION,
+          lastVocabularyHash: wordData === saved.words
+            ? saved.meta.lastVocabularyHash
+            : '', // Reset hash so vocabulary re-imports
+        },
         player: {
           ...saved.player,
           streakDays,
@@ -121,13 +137,32 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       const today = getTodayDate();
       const updatedWords = { ...state.words };
       let newCount = 0;
+      let updatedCount = 0;
 
       for (const entry of action.payload) {
         if (!updatedWords[entry.id]) {
+          // New word — create from scratch
           updatedWords[entry.id] = createWordState(entry, today);
           newCount++;
+        } else {
+          // Existing word — update content fields, preserve learning progress
+          const existing = updatedWords[entry.id];
+          updatedWords[entry.id] = {
+            ...existing,
+            // Update content fields (user may have corrected definitions)
+            word: entry.word,
+            variants: entry.variants,
+            phonetic: entry.phonetic,
+            partOfSpeech: entry.partOfSpeech,
+            definition: entry.definition,
+            definitionDetail: entry.definitionDetail,
+            exampleSentences: entry.exampleSentences,
+            parentNotes: entry.parentNotes,
+            sourceDate: entry.sourceDate,
+            // Learning progress fields are preserved from existing
+          };
+          updatedCount++;
         }
-        // Existing words are NOT overwritten — preserve learning progress
       }
 
       return {
