@@ -1,125 +1,177 @@
 // ============================================================
-// Diamond Mine Game Engine — Multiple Choice Recognition
+// Diamond Mine Game Engine — 12-block wall, multi-target mining
 // ============================================================
 import type { GameEngine, GameWord, Question, AnswerResult, GameProgress, MasteryLevel } from '../../types';
 import { XP_CONFIG } from '../../types';
 
-const QUESTIONS_PER_ROUND = 12;
-const OPTIONS_PER_QUESTION = 4;
+const WALL_SIZE = 12; // 3×4 grid of stone blocks
+const TARGETS_PER_WALL = 3; // Find 3 correct words on each wall
 
 export class DiamondMineEngine implements GameEngine {
   private words: GameWord[] = [];
-  private currentIndex = 0;
-  private questions: Question[] = [];
-  private correctCount = 0;
-  private incorrectCount = 0;
+  private walls: WallData[] = [];
+  private currentWallIndex = 0;
+  private totalCorrect = 0;
+  private totalIncorrect = 0;
+  private totalQuestions = 0;
   private xpEarned = 0;
-  private roundWords: GameWord[] = [];
+  private comboCount = 0;
+  private maxCombo = 0;
 
   initialize(words: GameWord[]): void {
-    this.words = words;
-    this.currentIndex = 0;
-    this.correctCount = 0;
-    this.incorrectCount = 0;
+    this.words = [...words].sort(() => Math.random() - 0.5);
+    this.currentWallIndex = 0;
+    this.totalCorrect = 0;
+    this.totalIncorrect = 0;
+    this.totalQuestions = 0;
     this.xpEarned = 0;
+    this.comboCount = 0;
+    this.maxCombo = 0;
 
-    // Select words for this round (up to QUESTIONS_PER_ROUND)
-    this.roundWords = this.selectRoundWords(words);
-    this.questions = this.generateQuestions(this.roundWords);
+    // Generate walls — each wall has WALL_SIZE blocks with TARGETS_PER_WALL correct targets
+    this.walls = this.generateWalls(this.words);
   }
 
   nextQuestion(): Question | null {
-    if (this.currentIndex >= this.questions.length) {
-      return null;
+    // Wall mode: return the current wall as a special question
+    if (this.currentWallIndex < this.walls.length) {
+      const wall = this.walls[this.currentWallIndex];
+      return {
+        wordId: `wall_${this.currentWallIndex}`,
+        type: 'multiple_choice',
+        prompt: '', // Not used in wall mode — targets shown separately
+        correctAnswer: wall.targets.map(t => t.word).join('|'),
+        options: wall.blocks,
+        phonetic: '',
+      };
     }
-    return this.questions[this.currentIndex];
+    return null;
   }
 
   submitAnswer(answer: string): AnswerResult {
-    const question = this.questions[this.currentIndex];
-    if (!question) {
-      throw new Error('No active question');
-    }
+    const wall = this.walls[this.currentWallIndex];
+    if (!wall) throw new Error('No active wall');
 
-    const isCorrect = answer.toLowerCase().trim() === question.correctAnswer.toLowerCase().trim();
-    const word = this.words.find((w) => w.id === question.wordId);
+    const clickedWord = answer.toLowerCase().trim();
+    const target = wall.remainingTargets.find(
+      (t) => t.word.toLowerCase().trim() === clickedWord
+    );
 
-    if (isCorrect) {
-      this.correctCount++;
+    if (target) {
+      // Correct! Remove from remaining targets
+      wall.remainingTargets = wall.remainingTargets.filter((t) => t !== target);
+      this.totalCorrect++;
+      this.comboCount++;
+      if (this.comboCount > this.maxCombo) {
+        this.maxCombo = this.comboCount;
+      }
+
+      // Combo XP bonus
+      const comboBonus = Math.min(this.comboCount - 1, 5) * 2; // Up to +10 XP for 6+ combo
+      const xp = XP_CONFIG.BASE_CORRECT + comboBonus;
+      this.xpEarned += xp;
+      this.totalQuestions++;
+
+      // Check if wall is complete
+      if (wall.remainingTargets.length === 0) {
+        this.currentWallIndex++;
+        this.comboCount = 0; // Reset combo between walls
+      }
+
+      const oldMastery = target.masteryLevel ?? 0;
+      const newMastery = Math.min(oldMastery + 1, 5) as MasteryLevel;
+
+      return {
+        correct: true,
+        correctAnswer: target.word,
+        xpEarned: xp,
+        newMasteryLevel: newMastery,
+        masteryChanged: newMastery !== oldMastery,
+      };
     } else {
-      this.incorrectCount++;
+      // Incorrect
+      this.totalIncorrect++;
+      this.comboCount = 0;
+      this.totalQuestions++;
+      this.xpEarned += 0;
+
+      // Find the "most relevant" target to show as answer
+      const firstTarget = wall.remainingTargets[0] || wall.targets[0];
+
+      return {
+        correct: false,
+        correctAnswer: firstTarget.word,
+        xpEarned: 0,
+        newMasteryLevel: Math.max(firstTarget.masteryLevel - 1, 0) as MasteryLevel,
+        masteryChanged: true,
+      };
     }
-
-    const baseXp = isCorrect ? XP_CONFIG.BASE_CORRECT : 0;
-    this.xpEarned += baseXp;
-
-    // Calculate new mastery level
-    const oldMastery = word?.masteryLevel ?? 0;
-    const newMastery = isCorrect
-      ? Math.min(oldMastery + 1, 5) as MasteryLevel
-      : Math.max(oldMastery - 1, 0) as MasteryLevel;
-
-    this.currentIndex++;
-
-    return {
-      correct: isCorrect,
-      correctAnswer: question.correctAnswer,
-      xpEarned: baseXp,
-      newMasteryLevel: newMastery,
-      masteryChanged: newMastery !== oldMastery,
-    };
   }
 
   getProgress(): GameProgress {
     return {
-      currentQuestion: this.currentIndex,
-      totalQuestions: this.questions.length,
-      correctCount: this.correctCount,
-      incorrectCount: this.incorrectCount,
+      currentQuestion: this.totalQuestions,
+      totalQuestions: this.walls.length * TARGETS_PER_WALL,
+      correctCount: this.totalCorrect,
+      incorrectCount: this.totalIncorrect,
       xpEarned: this.xpEarned,
-      isComplete: this.currentIndex >= this.questions.length,
+      isComplete: this.isComplete(),
     };
   }
 
   isComplete(): boolean {
-    return this.currentIndex >= this.questions.length;
+    return this.currentWallIndex >= this.walls.length;
   }
 
-  private selectRoundWords(words: GameWord[]): GameWord[] {
-    // Prioritize lower mastery words, but include some higher mastery for review
+  getCurrentWall(): WallData | null {
+    if (this.currentWallIndex < this.walls.length) {
+      return this.walls[this.currentWallIndex];
+    }
+    return null;
+  }
+
+  getComboCount(): number {
+    return this.comboCount;
+  }
+
+  getMaxCombo(): number {
+    return this.maxCombo;
+  }
+
+  private generateWalls(words: GameWord[]): WallData[] {
+    const walls: WallData[] = [];
     const sorted = [...words].sort((a, b) => a.masteryLevel - b.masteryLevel);
-    return sorted.slice(0, Math.min(QUESTIONS_PER_ROUND, sorted.length));
-  }
 
-  private generateQuestions(words: GameWord[]): Question[] {
-    const allWords = this.words.filter((w) => !words.includes(w));
-    const questions: Question[] = [];
+    // Each wall: 12 blocks, 3 targets
+    let idx = 0;
+    while (idx < sorted.length) {
+      const targets = sorted.slice(idx, idx + TARGETS_PER_WALL);
+      if (targets.length === 0) break;
 
-    for (const word of words) {
-      // Generate distractors from other words
-      const distractors = this.pickDistractors(word, allWords, OPTIONS_PER_QUESTION - 1);
-      const options = [word.word, ...distractors].sort(() => Math.random() - 0.5);
+      // Generate distractors from remaining words
+      const distractors = sorted
+        .filter((w) => !targets.includes(w))
+        .slice(0, WALL_SIZE - targets.length);
 
-      questions.push({
-        wordId: word.id,
-        type: 'multiple_choice',
-        prompt: word.definition,
-        correctAnswer: word.word,
-        options,
-        phonetic: word.phonetic,
+      // If not enough distractors, we may have fewer blocks
+      const blocks = [...targets.map((t) => t.word), ...distractors.map((d) => d.word)]
+        .sort(() => Math.random() - 0.5);
+
+      walls.push({
+        targets: targets,
+        remainingTargets: [...targets],
+        blocks,
       });
+
+      idx += TARGETS_PER_WALL;
     }
 
-    return questions;
+    return walls;
   }
+}
 
-  private pickDistractors(target: GameWord, pool: GameWord[], count: number): string[] {
-    const available = pool
-      .filter((w) => w.id !== target.id)
-      .map((w) => w.word);
-
-    // Shuffle and pick
-    const shuffled = [...available].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
-  }
+export interface WallData {
+  targets: GameWord[];
+  remainingTargets: GameWord[];
+  blocks: string[]; // All words shown on the wall (targets + distractors)
 }

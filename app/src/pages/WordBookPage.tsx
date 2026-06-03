@@ -31,7 +31,7 @@ export default function WordBookPage() {
   if (allWords.length === 0) {
     return (
       <div className="flex-col" style={{ padding: 24, gap: 16, alignItems: 'center' }}>
-        <div className="minecraft-panel" style={{ padding: 32, textAlign: 'center' }}>
+        <div className="mc-panel" style={{ padding: 32, textAlign: 'center' }}>
           <span style={{ fontSize: 48 }}>📚</span>
           <p style={{ color: '#AAA', fontSize: 14, marginTop: 12 }}>
             Your word book is empty.
@@ -56,7 +56,7 @@ export default function WordBookPage() {
         placeholder="Search words..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="minecraft-panel-inset"
+        className="mc-panel-inset"
         style={{
           width: '100%',
           padding: '8px 12px',
@@ -92,7 +92,7 @@ export default function WordBookPage() {
           return (
             <div key={word.id}>
               <button
-                className="minecraft-panel"
+                className="mc-panel"
                 onClick={() => setExpandedId(isExpanded ? null : word.id)}
                 style={{
                   display: 'flex',
@@ -121,7 +121,7 @@ export default function WordBookPage() {
 
               {isExpanded && (
                 <div
-                  className="minecraft-panel-inset"
+                  className="mc-panel-inset"
                   style={{
                     padding: 12,
                     marginTop: -2,
@@ -187,7 +187,7 @@ function FilterChip({
 }) {
   return (
     <button
-      className={active ? 'minecraft-button btn-gold' : 'minecraft-button btn-stone'}
+      className={active ? 'btn btn-gold' : 'btn btn-ghost'}
       style={{ fontSize: 8, padding: '4px 8px' }}
       onClick={onClick}
     >

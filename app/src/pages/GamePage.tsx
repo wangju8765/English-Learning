@@ -52,7 +52,7 @@ export default function GamePage() {
   if (gameResult) {
     return (
       <div className="flex-col" style={{ padding: 16, gap: 16 }}>
-        <div className="minecraft-panel" style={{ padding: 24, textAlign: 'center' }}>
+        <div className="mc-panel" style={{ padding: 24, textAlign: 'center' }}>
           <h2 className="pixel-text" style={{ fontSize: 18, color: '#FFC107', marginBottom: 16 }}>
             🏆 Adventure Complete!
           </h2>
@@ -84,7 +84,7 @@ export default function GamePage() {
 
         {/* Wrong words review */}
         {gameResult.incorrectCount > 0 && (
-          <div className="minecraft-panel" style={{ padding: 16 }}>
+          <div className="mc-panel" style={{ padding: 16 }}>
             <h3 className="pixel-text-sm" style={{ color: '#FF5252', fontSize: 10, marginBottom: 8 }}>
               🔄 Words to Review
             </h3>
@@ -107,14 +107,14 @@ export default function GamePage() {
         {/* Action buttons */}
         <div className="flex-col" style={{ gap: 8 }}>
           <button
-            className="minecraft-button btn-diamond"
+            className="btn btn-primary"
             style={{ width: '100%', padding: '12px 24px', fontSize: 12 }}
             onClick={() => navigate('/quest')}
           >
             🎮 Play Another Mode
           </button>
           <button
-            className="minecraft-button btn-stone"
+            className="btn btn-ghost"
             style={{ width: '100%', padding: '12px 24px', fontSize: 12 }}
             onClick={() => navigate('/')}
           >
@@ -133,7 +133,7 @@ export default function GamePage() {
         <h2 className="pixel-text-sm" style={{ color: '#FFF', fontSize: 10 }}>
           {getGameTitle(gameMode)}
         </h2>
-        <button className="minecraft-button btn-stone" style={{ fontSize: 8, padding: '4px 8px' }} onClick={handleQuit}>
+        <button className="btn btn-ghost" style={{ fontSize: 8, padding: '4px 8px' }} onClick={handleQuit}>
           ✕ Quit
         </button>
       </div>
@@ -149,7 +149,7 @@ export default function GamePage() {
 
       {gameMode !== 'diamond_mine' && (
         <div className="flex-center" style={{ height: 200, padding: 24 }}>
-          <div className="minecraft-panel" style={{ padding: 24, textAlign: 'center' }}>
+          <div className="mc-panel" style={{ padding: 24, textAlign: 'center' }}>
             <span style={{ fontSize: 48 }}>🚧</span>
             <p className="pixel-text-sm" style={{ color: '#FFC107', fontSize: 10, marginTop: 12 }}>
               Coming Soon!
@@ -158,7 +158,7 @@ export default function GamePage() {
               This game mode is under construction. Check back later!
             </p>
             <button
-              className="minecraft-button btn-stone"
+              className="btn btn-ghost"
               style={{ marginTop: 16, fontSize: 10, padding: '8px 16px' }}
               onClick={() => navigate('/quest')}
             >
@@ -173,7 +173,7 @@ export default function GamePage() {
 
 function ResultStat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="minecraft-panel-inset" style={{ padding: '8px 12px', textAlign: 'center' }}>
+    <div className="mc-panel-inset" style={{ padding: '8px 12px', textAlign: 'center' }}>
       <div style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>{label}</div>
       <div className="pixel-text-sm" style={{ fontSize: 12, color }}>{value}</div>
     </div>

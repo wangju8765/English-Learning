@@ -1,100 +1,139 @@
 {
   "version": 1,
-  "contentHash": "2a417fa8",
-  "generatedAt": "2026-06-03T16:02:18.670Z",
+  "contentHash": "04fac2d2",
+  "generatedAt": "2026-06-03T16:46:14.416Z",
   "entries": [
     {
       "id": "mac",
       "word": "Mac",
-      "variants": [
-        "Macintosh"
-      ],
-      "phonetic": "/mæk/ /ˈmækɪntɒʃ/",
-      "partOfSpeech": "n. (名词)",
-      "definition": "Mac: 苹果电脑 (口语简称)；Macintosh: 麦金塔电脑 (苹果电脑的全称)",
+      "phonetic": "/mæk/",
+      "partOfSpeech": "n.",
+      "definition": "苹果电脑（口语简称）；麦金塔电脑的缩写",
       "exampleSentences": [
         {
           "english": "My brother has a new Mac.",
           "chinese": "我弟弟有一台新的Mac电脑。"
         },
         {
-          "english": "This software only works on Macintosh.",
+          "english": "This software only works on Mac.",
           "chinese": "这个软件只能在苹果电脑上运行。"
         }
       ],
       "sourceDate": "2026-06-03",
-      "parentNotes": "孩子记录了缩写和全称的对应关系，这是苹果电脑的专属名称。"
+      "parentNotes": "全称 Macintosh。孩子记录了缩写和全称的对应关系，这是苹果电脑的专属名称。"
+    },
+    {
+      "id": "macintosh",
+      "word": "Macintosh",
+      "phonetic": "/ˈmækɪntɒʃ/",
+      "partOfSpeech": "n.",
+      "definition": "麦金塔电脑（苹果电脑的全称）",
+      "exampleSentences": [
+        {
+          "english": "The original Macintosh was released in 1984.",
+          "chinese": "最初的麦金塔电脑于1984年发布。"
+        }
+      ],
+      "sourceDate": "2026-06-03",
+      "parentNotes": "Mac 的全称，日常多用缩写 Mac。"
     },
     {
       "id": "os",
       "word": "OS",
-      "variants": [
-        "Operating System"
-      ],
-      "phonetic": "/ˌoʊˈes/ /ˈɑːpəreɪtɪŋ ˈsɪstəm/",
-      "partOfSpeech": "n. (名词)",
-      "definition": "OS: 操作系统的缩写 (Operating System)；Operating: 操作的 (动词 operate 的现在分词)；System: 系统",
+      "phonetic": "/ˌoʊˈes/",
+      "partOfSpeech": "n.",
+      "definition": "操作系统（Operating System 的缩写）",
       "exampleSentences": [
         {
           "english": "The OS helps us run apps.",
           "chinese": "操作系统帮我们运行软件。"
         },
         {
+          "english": "Which OS does your computer use?",
+          "chinese": "你的电脑用的是什么操作系统？"
+        }
+      ],
+      "sourceDate": "2026-06-03",
+      "parentNotes": "孩子把 OS 拆成了 Operation(操作) 和 System(系统)。虽然准确的英文是 Operating，但理解逻辑完全正确！"
+    },
+    {
+      "id": "operating-system",
+      "word": "Operating System",
+      "phonetic": "/ˈɑːpəreɪtɪŋ ˈsɪstəm/",
+      "partOfSpeech": "n.",
+      "definition": "操作系统（管理电脑硬件和软件的核心程序）",
+      "exampleSentences": [
+        {
           "english": "An operating system manages computer hardware.",
           "chinese": "操作系统管理着电脑硬件。"
         }
       ],
       "sourceDate": "2026-06-03",
-      "parentNotes": "孩子非常敏锐地把 OS 拆成了 Operation(操作) 和 System(系统)。虽然准确的英文是 Operating，但孩子的理解逻辑是完全正确的！"
+      "parentNotes": "Operating（操作的）+ System（系统）。OS 是这个短语的缩写。"
     },
     {
-      "id": "window-vs-windows",
-      "word": "Window vs Windows",
-      "phonetic": "/ˈwɪndoʊ/ vs /ˈwɪndoʊz/",
-      "partOfSpeech": "n. (名词)",
-      "definition": "Window: 窗口 (单数，泛指任何一个窗口)；Windows: 视窗系统 (复数，首字母大写时特指微软公司的操作系统)",
+      "id": "window",
+      "word": "Window",
+      "phonetic": "/ˈwɪndoʊ/",
+      "partOfSpeech": "n.",
+      "definition": "窗口（屏幕上显示的方框区域）",
       "exampleSentences": [
         {
           "english": "Close that window, please.",
           "chinese": "请把那个窗口关上。"
         },
         {
-          "english": "My dad's computer uses Windows.",
-          "chinese": "我爸爸的电脑用的是Windows系统。"
+          "english": "I have too many windows open.",
+          "chinese": "我打开了太多窗口。"
         }
       ],
       "sourceDate": "2026-06-03",
-      "parentNotes": "区分大小写和单复数的关键！小写的 window 是屏幕上的方框，大写的 Windows 是那个熟悉的四色旗标志。"
+      "parentNotes": "小写 window 指屏幕上的方框。首字母大写的 Windows 是微软的操作系统。注意区分！"
+    },
+    {
+      "id": "windows",
+      "word": "Windows",
+      "phonetic": "/ˈwɪndoʊz/",
+      "partOfSpeech": "n.",
+      "definition": "视窗操作系统（微软公司的操作系统，四个方块标志）",
+      "exampleSentences": [
+        {
+          "english": "My dad's computer uses Windows.",
+          "chinese": "我爸爸的电脑用的是Windows系统。"
+        },
+        {
+          "english": "Windows 11 is the latest version.",
+          "chinese": "Windows 11 是最新的版本。"
+        }
+      ],
+      "sourceDate": "2026-06-03",
+      "parentNotes": "首字母必须大写，是专有名词。区别于小写 window（普通窗口）。"
     },
     {
       "id": "software",
       "word": "Software",
-      "variants": [
-        "Soft",
-        "Ware"
-      ],
-      "phonetic": "/ˈsɔːftwer/ /sɔːft/ /wer/",
-      "partOfSpeech": "n. (名词) / adj. (形容词) / n. (名词)",
-      "definition": "Software: 软件 (计算机程序的总称)；Soft: 柔软的 (词根)；Ware: 器皿；物品 (词根，常作后缀)",
+      "phonetic": "/ˈsɔːftwer/",
+      "partOfSpeech": "n.",
+      "definition": "软件（计算机程序的总称）",
       "exampleSentences": [
         {
           "english": "We need to update the software.",
           "chinese": "我们需要更新软件。"
         },
         {
-          "english": "This pillow is soft.",
-          "chinese": "这个枕头是柔软的。"
+          "english": "This software is free to use.",
+          "chinese": "这个软件可以免费使用。"
         }
       ],
       "sourceDate": "2026-06-03",
-      "parentNotes": "孩子的拆词逻辑非常棒！Soft(软的) + Ware(东西) = 软件。就像 Hardware(硬件) = Hard(硬的) + Ware(东西)。"
+      "parentNotes": "Soft（软的）+ Ware（东西）= 软件。对比例：Hardware（硬件）= Hard（硬的）+ Ware（东西）。孩子的拆词逻辑非常棒！"
     },
     {
       "id": "license",
       "word": "License",
       "phonetic": "/ˈlaɪsns/",
-      "partOfSpeech": "n. (名词)",
-      "definition": "许可证；执照",
+      "partOfSpeech": "n.",
+      "definition": "许可证；执照（允许你做某事的官方文件）",
       "exampleSentences": [
         {
           "english": "Please accept the license agreement.",
@@ -111,8 +150,8 @@
       "id": "install",
       "word": "Install",
       "phonetic": "/ɪnˈstɔːl/",
-      "partOfSpeech": "v. (动词)",
-      "definition": "安装 (把软件放到电脑里)",
+      "partOfSpeech": "v.",
+      "definition": "安装（把软件放到电脑里使其可用）",
       "exampleSentences": [
         {
           "english": "Time to install the game.",
@@ -128,30 +167,47 @@
     {
       "id": "agree",
       "word": "Agree",
-      "variants": [
-        "Disagree"
-      ],
-      "phonetic": "/əˈɡriː/ /ˌdɪsəˈɡriː/",
-      "partOfSpeech": "v. (动词)",
-      "definition": "Agree: 同意；Disagree: 不同意 (Dis- 表示“不”)",
+      "phonetic": "/əˈɡriː/",
+      "partOfSpeech": "v.",
+      "definition": "同意；赞成",
       "exampleSentences": [
         {
-          "english": "If you agree, click \"Yes\".",
-          "chinese": "如果你同意，就点“是”。"
+          "english": "If you agree, click Yes.",
+          "chinese": "如果你同意，就点"
         },
+        {
+          "english": "I agree with your idea.",
+          "chinese": "我同意你的想法。"
+        }
+      ],
+      "sourceDate": "2026-06-03",
+      "parentNotes": "反义词：Disagree（不同意）。Dis- 是表示否定/相反的前缀。"
+    },
+    {
+      "id": "disagree",
+      "word": "Disagree",
+      "phonetic": "/ˌdɪsəˈɡriː/",
+      "partOfSpeech": "v.",
+      "definition": "不同意；反对",
+      "exampleSentences": [
         {
           "english": "I disagree with you.",
           "chinese": "我不同意你的看法。"
+        },
+        {
+          "english": "They disagree about which game to play.",
+          "chinese": "他们对于玩哪个游戏意见不同。"
         }
       ],
-      "sourceDate": "2026-06-03"
+      "sourceDate": "2026-06-03",
+      "parentNotes": "Dis-（不）+ Agree（同意）= 不同意。Dis- 是常见的否定前缀。"
     },
     {
       "id": "continue",
       "word": "Continue",
       "phonetic": "/kənˈtɪnjuː/",
-      "partOfSpeech": "v. (动词)",
-      "definition": "继续",
+      "partOfSpeech": "v.",
+      "definition": "继续（接着做之前在做的事）",
       "exampleSentences": [
         {
           "english": "Press any key to continue.",
@@ -168,8 +224,8 @@
       "id": "version",
       "word": "Version",
       "phonetic": "/ˈvɜːrʒn/",
-      "partOfSpeech": "n. (名词)",
-      "definition": "版本",
+      "partOfSpeech": "n.",
+      "definition": "版本（软件或文件的更新编号）",
       "exampleSentences": [
         {
           "english": "This is Version 1.0.",
@@ -186,26 +242,27 @@
       "id": "intel",
       "word": "Intel",
       "phonetic": "/ˈɪntel/",
-      "partOfSpeech": "n. (名词)",
-      "definition": "英特尔 (著名的芯片品牌)",
+      "partOfSpeech": "n.",
+      "definition": "英特尔（著名的电脑芯片制造公司）",
       "exampleSentences": [
         {
           "english": "Intel makes fast processors.",
-          "chinese": "英特尔生产快速的芯片。"
+          "chinese": "英特尔生产快速的处理器。"
         },
         {
           "english": "My old laptop has an Intel chip.",
           "chinese": "我的旧笔记本用的是英特尔芯片。"
         }
       ],
-      "sourceDate": "2026-06-03"
+      "sourceDate": "2026-06-03",
+      "parentNotes": "常见于旧款 Mac 电脑的芯片标识。新款 Mac 使用 Apple Silicon（苹果自研芯片）。"
     },
     {
       "id": "silicon",
       "word": "Silicon",
       "phonetic": "/ˈsɪlɪkən/",
-      "partOfSpeech": "n. (名词)",
-      "definition": "硅；硅芯片 (苹果自研芯片的核心材料)",
+      "partOfSpeech": "n.",
+      "definition": "硅（制造电脑芯片的核心材料）；也指苹果自研芯片",
       "exampleSentences": [
         {
           "english": "Apple uses its own Silicon chip.",
@@ -216,35 +273,34 @@
           "chinese": "硅谷是科技中心。"
         }
       ],
-      "sourceDate": "2026-06-03"
+      "sourceDate": "2026-06-03",
+      "parentNotes": "硅谷（Silicon Valley）是世界科技中心。Apple Silicon 是苹果自研芯片的品牌名。"
     },
     {
       "id": "trash",
       "word": "Trash",
       "phonetic": "/træʃ/",
-      "partOfSpeech": "n. (名词)",
-      "definition": "垃圾桶；废纸篓 (苹果电脑里的删除目的地)",
+      "partOfSpeech": "n.",
+      "definition": "垃圾桶；废纸篓（苹果系统中存放待删除文件的地方）",
       "exampleSentences": [
         {
           "english": "Move the file to the Trash.",
           "chinese": "把文件移到废纸篓。"
         },
         {
-          "english": "Empty the trash when full.",
-          "chinese": "满了就清空垃圾桶。"
+          "english": "Empty the trash when it's full.",
+          "chinese": "垃圾桶满了就清空它。"
         }
       ],
-      "sourceDate": "2026-06-03"
+      "sourceDate": "2026-06-03",
+      "parentNotes": "Mac 上的垃圾桶叫 Trash，Windows 上叫 Recycle Bin（回收站）。"
     },
     {
       "id": "drag",
       "word": "Drag",
-      "variants": [
-        "Drag to"
-      ],
-      "phonetic": "/dræɡ/ /dræɡ tuː/",
-      "partOfSpeech": "v. (动词)",
-      "definition": "Drag: 拖拽 (按住鼠标移动)；Drag to: 拖拽到…… (后面接目的地)",
+      "phonetic": "/dræɡ/",
+      "partOfSpeech": "v.",
+      "definition": "拖拽（按住鼠标按键不放，移动物体到新位置）",
       "exampleSentences": [
         {
           "english": "Drag the icon to the folder.",
@@ -252,55 +308,64 @@
         },
         {
           "english": "Learn how to drag and drop.",
-          "chinese": "学习如何拖放。"
+          "chinese": "学习如何拖放文件。"
         }
       ],
       "sourceDate": "2026-06-03",
-      "parentNotes": "对应纸上的手型图标，这是编程和日常操作中很重要的鼠标动作。"
+      "parentNotes": "孩子纸上的手型图标就是指这个操作。编程和日常操作中非常重要的鼠标动作。Drag to 表示拖拽到某个目的地。"
     },
     {
       "id": "void",
       "word": "Void",
-      "variants": [
-        "Main"
-      ],
-      "phonetic": "/vɔɪd/ /meɪn/",
-      "partOfSpeech": "代码关键字",
-      "definition": "Void: 空的；无效的 (在代码中表示“没有返回值”)；Main: 主要的 (程序的入口点)",
+      "phonetic": "/vɔɪd/",
+      "partOfSpeech": "n.",
+      "definition": "空的；无效的（编程中表示函数没有返回值）",
       "exampleSentences": [
         {
-          "english": "public void main",
-          "chinese": ") { ... }(Java程序的标准开头。"
-        },
-        {
-          "english": "The main idea is important.",
-          "chinese": "主要的意思很重要。"
+          "english": "In Java, void means the method returns nothing.",
+          "chinese": "在Java中，void 表示该方法不返回任何值。"
         }
       ],
       "sourceDate": "2026-06-03",
-      "parentNotes": "孩子写了 `void main()`，这是写代码时最先接触的“主函数”。"
+      "parentNotes": "孩子写了 void main()，这是 Java 程序的标准开头，表示主函数不返回任何值。"
+    },
+    {
+      "id": "main",
+      "word": "Main",
+      "phonetic": "/meɪn/",
+      "partOfSpeech": "adj.",
+      "definition": "主要的（编程中表示程序的入口函数）",
+      "exampleSentences": [
+        {
+          "english": "The main method is where the program starts.",
+          "chinese": "main 方法是程序开始的地方。"
+        },
+        {
+          "english": "What is the main idea of this story?",
+          "chinese": "这个故事的主要意思是什么？"
+        }
+      ],
+      "sourceDate": "2026-06-03",
+      "parentNotes": "main() 是程序开始执行的地方，每个 Java 程序都从 main 开始运行。"
     },
     {
       "id": "learn",
       "word": "Learn",
-      "variants": [
-        "Learning"
-      ],
-      "phonetic": "/lɜːrn/ /ˈlɜːrnɪŋ/",
-      "partOfSpeech": "v. (动词) / v.-ing (动名词)",
-      "definition": "Learn: 学习 (动词原形)；Learning: 学习 (正在进行的状态；或者作为名词“学问”)",
+      "phonetic": "/lɜːrn/",
+      "partOfSpeech": "v.",
+      "definition": "学习；学会",
       "exampleSentences": [
         {
           "english": "I want to learn Java.",
-          "chinese": "我想学Java。——原形"
+          "chinese": "我想学Java。"
         },
         {
           "english": "Learning Java is fun!",
-          "chinese": "学习Java真有趣！——动名词做主语"
+          "chinese": "学习Java真有趣！"
         }
       ],
       "sourceDate": "2026-06-03",
-      "parentNotes": "孩子纸上写的是 leaing (漏了r)，正确的拼写是 learning。它是由 Learn + ing 组成的。"
+      "parentNotes": "孩子纸上写的是 leaing（漏了 r），正确拼写是 learning。Learning = Learn + ing（正在进行的状态，或作为名词表示\"学问\"）。"
     }
   ]
 }

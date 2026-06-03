@@ -1,9 +1,9 @@
 // ============================================================
-// Diamond Mine — Multiple Choice Word Recognition Game
+// Diamond Mine — 12-block wall, multi-target word mining
 // ============================================================
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { GameWord, Question, GameProgress } from '../../types';
-import { DiamondMineEngine } from './DiamondMineEngine';
+import type { GameWord, GameProgress } from '../../types';
+import { DiamondMineEngine, type WallData } from './DiamondMineEngine';
 import { speakWord } from '../../services/speech';
 
 interface DiamondMineProps {
@@ -14,218 +14,336 @@ interface DiamondMineProps {
 
 interface BlockState {
   word: string;
-  isCorrectOption: boolean;
+  isTarget: boolean;
+  found: boolean;
   status: 'idle' | 'correct' | 'incorrect' | 'highlight';
 }
 
 export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMineProps) {
   const engineRef = useRef<DiamondMineEngine | null>(null);
-  const [question, setQuestion] = useState<Question | null>(null);
-  const [blocks, setBlocks] = useState<BlockState[]>([]);
-  const [feedback, setFeedback] = useState<{ correct: boolean; word: string; xp: number } | null>(null);
+  const [wall, setWall] = useState<WallData | null>(null);
+  const [blockStates, setBlockStates] = useState<Map<string, BlockState>>(new Map());
+  const [feedback, setFeedback] = useState<{
+    correct: boolean;
+    word: string;
+    xp: number;
+    combo: number;
+  } | null>(null);
   const [progress, setProgress] = useState<GameProgress>({
-    currentQuestion: 0,
-    totalQuestions: 0,
-    correctCount: 0,
-    incorrectCount: 0,
-    xpEarned: 0,
-    isComplete: false,
+    currentQuestion: 0, totalQuestions: 0, correctCount: 0,
+    incorrectCount: 0, xpEarned: 0, isComplete: false,
   });
   const [isComplete, setIsComplete] = useState(false);
+  const [comboCount, setComboCount] = useState(0);
   const answerStartRef = useRef<number>(Date.now());
 
-  // Initialize engine
   useEffect(() => {
     const engine = new DiamondMineEngine();
     engine.initialize(words);
     engineRef.current = engine;
-    loadNextQuestion(engine);
+    loadWall(engine);
     answerStartRef.current = Date.now();
   }, [words]);
 
-  const loadNextQuestion = useCallback((engine: DiamondMineEngine) => {
-    const next = engine.nextQuestion();
-    if (!next) {
-      // Round complete
-      const prog = engine.getProgress();
-      setProgress(prog);
+  const loadWall = useCallback((engine: DiamondMineEngine) => {
+    const w = engine.getCurrentWall();
+    if (!w) {
       setIsComplete(true);
-      onComplete(prog);
+      setProgress(engine.getProgress());
+      onComplete(engine.getProgress());
       return;
     }
 
-    setQuestion(next);
+    setWall(w);
     setFeedback(null);
 
-    // Create blocks from options
-    if (next.options) {
-      const newBlocks: BlockState[] = next.options.map((word) => ({
-        word,
-        isCorrectOption: word === next.correctAnswer,
+    // Build block states
+    const states = new Map<string, BlockState>();
+    for (const blockWord of w.blocks) {
+      states.set(blockWord, {
+        word: blockWord,
+        isTarget: w.targets.some(
+          (t) => t.word.toLowerCase().trim() === blockWord.toLowerCase().trim()
+        ),
+        found: false,
         status: 'idle',
-      }));
-      setBlocks(newBlocks);
+      });
     }
-
+    setBlockStates(states);
     setProgress(engine.getProgress());
     answerStartRef.current = Date.now();
   }, [onComplete]);
 
   const handleBlockClick = useCallback(
-    (block: BlockState, index: number) => {
-      if (!engineRef.current || !question || feedback) return;
-      if (block.status !== 'idle') return;
+    (blockWord: string) => {
+      if (!engineRef.current || !wall || feedback) return;
+
+      const state = blockStates.get(blockWord);
+      if (!state || state.found) return;
 
       const responseTimeMs = Date.now() - answerStartRef.current;
-      const result = engineRef.current.submitAnswer(block.word);
+      const result = engineRef.current.submitAnswer(blockWord);
 
-      // Update block states
-      setBlocks((prev) =>
-        prev.map((b, i) => {
-          if (b.isCorrectOption && block.word !== b.word) {
-            return { ...b, status: 'highlight' }; // Show correct answer
-          }
-          if (i === index) {
-            return { ...b, status: result.correct ? 'correct' : 'incorrect' };
-          }
-          return b;
-        })
-      );
+      // Update block state
+      const newStates = new Map(blockStates);
+      if (result.correct) {
+        newStates.set(blockWord, { ...state, found: true, status: 'correct' });
+        speakWord(blockWord).catch(() => {});
 
-      // Show feedback
+        // Check if all targets on this wall found
+        const remainingTargets = engineRef.current.getCurrentWall()?.remainingTargets.length ?? 1;
+
+        if (remainingTargets <= 0) {
+          // Wall complete — move to next after delay
+          setTimeout(() => {
+            if (engineRef.current) {
+              loadWall(engineRef.current);
+            }
+          }, 1500);
+        }
+      } else {
+        newStates.set(blockWord, { ...state, status: 'incorrect' });
+        // Highlight the first remaining target
+        const curWall = engineRef.current.getCurrentWall();
+        const firstTarget = curWall?.remainingTargets[0];
+        if (firstTarget) {
+          const targetWord = firstTarget.word;
+          const targetState = newStates.get(targetWord);
+          if (targetState) {
+            newStates.set(targetWord, { ...targetState, status: 'highlight' });
+          }
+        }
+        // Clear highlight after a moment
+        setTimeout(() => {
+          setBlockStates((prev) => {
+            const next = new Map(prev);
+            const ts = next.get(firstTarget?.word || '');
+            if (ts && ts.status === 'highlight') {
+              next.set(firstTarget!.word, { ...ts, status: 'idle' });
+            }
+            return next;
+          });
+        }, 2000);
+        // Reset incorrect block
+        setTimeout(() => {
+          setBlockStates((prev) => {
+            const next = new Map(prev);
+            const s = next.get(blockWord);
+            if (s && s.status === 'incorrect') {
+              next.set(blockWord, { ...s, status: 'idle' });
+            }
+            return next;
+          });
+        }, 800);
+      }
+
+      setBlockStates(newStates);
+      setComboCount(engineRef.current.getComboCount());
+
       setFeedback({
         correct: result.correct,
         word: result.correctAnswer,
         xp: result.xpEarned,
+        combo: result.correct ? engineRef.current.getComboCount() : 0,
       });
 
-      // Speak the word if correct
-      if (result.correct) {
-        speakWord(question.correctAnswer).catch(() => {});
-      }
+      // Clear feedback
+      setTimeout(() => setFeedback(null), result.correct ? 1000 : 1800);
 
-      // Notify parent
-      onAnswer(question.wordId, result.correct, responseTimeMs);
+      onAnswer(
+        wall.targets.find(
+          (t) => t.word.toLowerCase().trim() === blockWord.toLowerCase().trim()
+        )?.id || wall.targets[0].id,
+        result.correct,
+        responseTimeMs
+      );
 
-      // Load next question after delay
-      setTimeout(() => {
-        loadNextQuestion(engineRef.current!);
-      }, result.correct ? 1200 : 2000);
+      setProgress(engineRef.current.getProgress());
     },
-    [question, feedback, onAnswer, loadNextQuestion]
+    [wall, blockStates, feedback, onAnswer, loadWall]
   );
+
+  // Calculate which blocks go in which row for the 3×4 grid
+  const displayBlocks = wall ? wall.blocks : [];
+  const gridCols = 4;
 
   if (isComplete) {
     return (
-      <div className="flex-col" style={{ alignItems: 'center', padding: 32, gap: 16 }}>
-        <div className="pixel-text" style={{ color: '#FFC107', fontSize: 18 }}>
+      <div className="flex-col gap-md" style={{ alignItems: 'center', padding: 32 }}>
+        <div className="pixel-text" style={{ color: 'var(--color-gold)', fontSize: 16 }}>
           ⛏️ Mine Complete!
         </div>
-        <div style={{ color: '#AAA', fontSize: 14 }}>
-          Correct: {progress.correctCount} / {progress.totalQuestions}
+        <div className="flex" style={{ gap: 32, marginTop: 8 }}>
+          <StatBox label="Found" value={`${progress.correctCount}`} color="var(--color-xp)" />
+          <StatBox label="Misses" value={`${progress.incorrectCount}`} color="var(--color-redstone)" />
+          <StatBox label="XP" value={`+${progress.xpEarned}`} color="var(--color-gold)" />
         </div>
-        <div style={{ color: '#80FF20', fontSize: 14 }}>
-          XP Earned: +{progress.xpEarned}
-        </div>
+        {engineRef.current && engineRef.current.getMaxCombo() >= 3 && (
+          <div className="pixel-text-sm" style={{ color: 'var(--color-diamond)', fontSize: 9, marginTop: 8 }}>
+            🔥 Max Combo: {engineRef.current.getMaxCombo()}x!
+          </div>
+        )}
       </div>
     );
   }
 
-  if (!question) {
+  if (!wall || displayBlocks.length === 0) {
     return (
       <div className="flex-center" style={{ height: 200 }}>
-        <span className="pixel-text" style={{ color: '#AAA' }}>Loading mine...</span>
+        <span className="pixel-text" style={{ color: 'var(--text-muted)' }}>
+          Digging tunnel...
+        </span>
       </div>
     );
   }
 
+  const targetsRemaining = wall.remainingTargets.length;
+  const targetsTotal = wall.targets.length;
+
   return (
-    <div className="flex-col" style={{ gap: 20, padding: 16 }}>
-      {/* Progress bar */}
+    <div className="flex-col gap-md" style={{ padding: 16 }}>
+      {/* Progress header */}
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9 }}>
-            Depth: Y={progress.currentQuestion * 5}
+        <div className="flex-between" style={{ marginBottom: 4 }}>
+          <span className="pixel-text-sm" style={{ color: 'var(--text-secondary)', fontSize: 8 }}>
+            Depth: Y={progress.currentQuestion * 4}
           </span>
-          <span className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9 }}>
-            {progress.currentQuestion}/{progress.totalQuestions}
+          <span className="pixel-text-sm" style={{ color: 'var(--text-secondary)', fontSize: 8 }}>
+            Found: {targetsTotal - targetsRemaining}/{targetsTotal}
           </span>
         </div>
         <div className="progress-bar">
           <div
             className="progress-bar-fill"
             style={{
-              width: `${(progress.currentQuestion / progress.totalQuestions) * 100}%`,
+              width: `${(progress.correctCount / Math.max(progress.totalQuestions, 1)) * 100}%`,
+              background: 'linear-gradient(90deg, var(--color-xp-dim), var(--color-xp))',
             }}
           />
         </div>
       </div>
 
-      {/* Target definition — what the player needs to find */}
-      <div className="minecraft-panel" style={{ padding: '12px 24px', textAlign: 'center' }}>
-        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>Find the word for:</div>
-        <div style={{ fontSize: 20, color: '#FFF', fontWeight: 700, fontFamily: 'var(--font-body)' }}>
-          {question.prompt}
+      {/* Target definitions to find */}
+      <div className="mc-panel" style={{ padding: '12px 16px', textAlign: 'center' }}>
+        <div className="pixel-text-sm" style={{ color: 'var(--text-muted)', fontSize: 7, marginBottom: 8 }}>
+          FIND THESE WORDS IN THE MINE:
         </div>
-        {question.phonetic && (
-          <div style={{ fontSize: 13, color: '#AAA', marginTop: 4, fontFamily: 'monospace' }}>
-            {question.phonetic}
+        <div className="flex-col gap-sm">
+          {wall.remainingTargets.map((target, i) => (
+            <div
+              key={target.id}
+              style={{
+                padding: '6px 10px',
+                background: 'rgba(255,193,7,0.08)',
+                border: '1px solid rgba(255,193,7,0.2)',
+                borderRadius: 2,
+                fontSize: 13,
+                color: 'var(--color-gold)',
+                animation: `fadeInUp 0.3s ${i * 0.1}s ease-out both`,
+              }}
+            >
+              {target.definition}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Combo + Feedback */}
+      <div style={{ minHeight: 28, textAlign: 'center' }}>
+        {feedback && (
+          <div
+            style={{
+              animation: 'fadeInUp 0.2s ease-out',
+              color: feedback.correct ? 'var(--color-xp)' : 'var(--color-redstone)',
+              fontSize: 13,
+            }}
+          >
+            {feedback.correct ? (
+              <span>
+                ✅ +{feedback.xp}XP
+                {feedback.combo >= 2 && (
+                  <span style={{ color: 'var(--color-diamond)', marginLeft: 8 }}>
+                    {feedback.combo}x COMBO!
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span>❌ Try again! Hint: {feedback.word}</span>
+            )}
           </div>
         )}
       </div>
 
-      {/* Feedback overlay */}
-      {feedback && (
+      {/* The Mine Wall — 3×4 grid */}
+      <div className="cave-bg" style={{ padding: 12, borderRadius: 4 }}>
         <div
-          className="flex-center"
           style={{
-            padding: 8,
-            background: feedback.correct ? 'rgba(128,255,32,0.2)' : 'rgba(255,85,85,0.2)',
-            border: `2px solid ${feedback.correct ? '#80FF20' : '#FF5555'}`,
-            borderRadius: 0,
+            display: 'grid',
+            gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+            gap: 8,
+            maxWidth: 560,
+            margin: '0 auto',
           }}
         >
-          <span
-            className="pixel-text-sm"
-            style={{ color: feedback.correct ? '#80FF20' : '#FF5555', fontSize: 10 }}
-          >
-            {feedback.correct ? `✅ Correct! +${feedback.xp}XP` : `❌ The answer was: ${feedback.word}`}
-          </span>
-        </div>
-      )}
+          {displayBlocks.map((blockWord, i) => {
+            const state = blockStates.get(blockWord);
+            const isFound = state?.found;
+            const status = state?.status || 'idle';
 
-      {/* Stone block grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-          gap: 12,
-          maxWidth: 500,
-          margin: '0 auto',
-        }}
-      >
-        {blocks.map((block, i) => (
-          <button
-            key={`${block.word}-${i}`}
-            className={`stone-block ${block.status === 'correct' ? 'correct' : ''} ${block.status === 'incorrect' ? 'incorrect' : ''} ${block.status === 'highlight' ? 'highlight' : ''}`}
-            onClick={() => handleBlockClick(block, i)}
-            disabled={!!feedback}
-            style={{
-              minWidth: 90,
-              minHeight: 70,
-            }}
-          >
-            {block.word}
-          </button>
-        ))}
+            // Calculate word length class for font sizing
+            const wordLen = blockWord.length;
+            const fontSize = wordLen > 12 ? 7 : wordLen > 9 ? 8 : wordLen > 6 ? 9 : 10;
+
+            return (
+              <button
+                key={`${blockWord}-${i}`}
+                className={[
+                  'stone-block',
+                  isFound ? 'diamond' : '',
+                  status === 'incorrect' ? 'incorrect' : '',
+                  status === 'highlight' ? 'highlight' : '',
+                ].join(' ')}
+                onClick={() => handleBlockClick(blockWord)}
+                disabled={isFound || !!feedback}
+                style={{
+                  fontSize,
+                  minWidth: 0,
+                  minHeight: 60,
+                  padding: '6px 8px',
+                  opacity: isFound ? 0.4 : 1,
+                  cursor: isFound ? 'default' : 'pointer',
+                }}
+              >
+                {isFound ? '💎' : blockWord}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* XP counter */}
+      {/* Combo indicator */}
       <div className="flex-center">
-        <span className="pixel-text-sm" style={{ color: '#80FF20', fontSize: 10 }}>
+        <span className="pixel-text-sm" style={{ color: 'var(--color-xp)', fontSize: 9 }}>
           ⭐ {progress.xpEarned} XP
         </span>
+        {comboCount >= 2 && (
+          <span
+            className="pixel-text-sm combo-pop"
+            style={{ color: 'var(--color-diamond)', fontSize: 9, marginLeft: 12 }}
+          >
+            🔥 {comboCount}x
+          </span>
+        )}
       </div>
+    </div>
+  );
+}
+
+function StatBox({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="flex-col" style={{ alignItems: 'center' }}>
+      <div className="pixel-text-sm" style={{ fontSize: 16, color }}>{value}</div>
+      <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>{label}</div>
     </div>
   );
 }

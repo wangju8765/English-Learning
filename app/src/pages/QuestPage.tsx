@@ -30,7 +30,7 @@ export default function QuestPage() {
   return (
     <div className="flex-col" style={{ padding: 16, gap: 16 }}>
       {/* Quest Header */}
-      <div className="minecraft-panel" style={{ padding: 16, textAlign: 'center' }}>
+      <div className="mc-panel" style={{ padding: 16, textAlign: 'center' }}>
         <h2 className="pixel-text" style={{ fontSize: 14, color: '#FFC107', marginBottom: 8 }}>
           📖 Daily Quest
         </h2>
@@ -64,7 +64,7 @@ export default function QuestPage() {
 
       {/* Word Count */}
       {allWords.length === 0 ? (
-        <div className="minecraft-panel" style={{ padding: 24, textAlign: 'center' }}>
+        <div className="mc-panel" style={{ padding: 24, textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
           <p style={{ color: '#AAA', fontSize: 14 }}>
             No vocabulary words yet!
@@ -128,7 +128,7 @@ function GameModeCard({
 
   return (
     <button
-      className="minecraft-panel"
+      className="mc-panel"
       onClick={locked ? undefined : onStart}
       disabled={locked}
       style={{
@@ -163,7 +163,7 @@ function GameModeCard({
         ) : locked ? (
           <span className="pixel-text-sm" style={{ color: '#666', fontSize: 10 }}>🔒</span>
         ) : (
-          <span className="minecraft-button btn-stone" style={{ fontSize: 8, padding: '4px 8px' }}>
+          <span className="btn btn-ghost" style={{ fontSize: 8, padding: '4px 8px' }}>
             PLAY
           </span>
         )}

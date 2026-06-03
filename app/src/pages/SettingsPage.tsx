@@ -55,13 +55,13 @@ export default function SettingsPage() {
       </h2>
 
       {message && (
-        <div className="minecraft-panel" style={{ padding: '8px 16px', background: '#2A2A1A', textAlign: 'center' }}>
+        <div className="mc-panel" style={{ padding: '8px 16px', background: '#2A2A1A', textAlign: 'center' }}>
           <span style={{ color: '#FFC107', fontSize: 12 }}>{message}</span>
         </div>
       )}
 
       {/* Player Name */}
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <h3 className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9, marginBottom: 12 }}>
           👤 Player
         </h3>
@@ -70,7 +70,7 @@ export default function SettingsPage() {
             type="text"
             value={player.name}
             onChange={(e) => dispatch({ type: 'SET_PLAYER_NAME', payload: e.target.value })}
-            className="minecraft-panel-inset"
+            className="mc-panel-inset"
             style={{
               flex: 1,
               padding: '8px 12px',
@@ -85,7 +85,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Audio Settings */}
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <h3 className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9, marginBottom: 12 }}>
           🔊 Audio
         </h3>
@@ -129,7 +129,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Gameplay Settings */}
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <h3 className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9, marginBottom: 12 }}>
           🎮 Gameplay
         </h3>
@@ -154,16 +154,16 @@ export default function SettingsPage() {
       </div>
 
       {/* Data Management */}
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <h3 className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9, marginBottom: 12 }}>
           💾 Data
         </h3>
         <div className="flex-col" style={{ gap: 8 }}>
-          <button className="minecraft-button btn-wood" style={{ width: '100%', fontSize: 10 }} onClick={handleExport}>
+          <button className="btn btn-gold" style={{ width: '100%', fontSize: 10 }} onClick={handleExport}>
             📥 Export Progress
           </button>
           <button
-            className="minecraft-button btn-stone"
+            className="btn btn-ghost"
             style={{ width: '100%', fontSize: 10 }}
             onClick={() => setShowImport(!showImport)}
           >
@@ -174,7 +174,7 @@ export default function SettingsPage() {
               <textarea
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
-                className="minecraft-panel-inset"
+                className="mc-panel-inset"
                 placeholder="Paste your exported JSON here..."
                 style={{
                   width: '100%',
@@ -188,13 +188,13 @@ export default function SettingsPage() {
                   fontFamily: 'monospace',
                 }}
               />
-              <button className="minecraft-button btn-gold" style={{ width: '100%', fontSize: 10 }} onClick={handleImport}>
+              <button className="btn btn-gold" style={{ width: '100%', fontSize: 10 }} onClick={handleImport}>
                 Confirm Import
               </button>
             </div>
           )}
           <button
-            className="minecraft-button"
+            className="btn btn-ghost"
             style={{
               width: '100%',
               fontSize: 10,
@@ -210,7 +210,7 @@ export default function SettingsPage() {
       </div>
 
       {/* About */}
-      <div className="minecraft-panel" style={{ padding: 16, textAlign: 'center' }}>
+      <div className="mc-panel" style={{ padding: 16, textAlign: 'center' }}>
         <p className="pixel-text-sm" style={{ color: '#80FF20', fontSize: 9 }}>
           English Craft v0.1.0
         </p>
@@ -237,7 +237,7 @@ function ToggleRow({
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <span style={{ color: '#CCC', fontSize: 12 }}>{label}</span>
       <button
-        className={enabled ? 'minecraft-button btn-diamond' : 'minecraft-button btn-stone'}
+        className={enabled ? 'btn btn-primary' : 'btn btn-ghost'}
         style={{ fontSize: 9, padding: '4px 12px', minWidth: 60 }}
         onClick={onChange}
         disabled={disabled}

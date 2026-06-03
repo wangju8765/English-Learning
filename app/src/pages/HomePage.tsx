@@ -41,7 +41,7 @@ export default function HomePage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <StatBox label="Level" value={`Lv.${level}`} color="#80FF20" />
           <StatBox label="Total XP" value={`${state.player.xp}`} color="#F5A623" />
@@ -66,7 +66,7 @@ export default function HomePage() {
 
       {/* Main Action Button */}
       <button
-        className="minecraft-button btn-diamond"
+        className="btn btn-primary"
         style={{ padding: '16px 32px', fontSize: 14, width: '100%' }}
         onClick={() => navigate('/quest')}
       >
@@ -86,7 +86,7 @@ export default function HomePage() {
       </div>
 
       {/* Daily Tip */}
-      <div className="minecraft-panel" style={{ padding: 12, background: '#3A3A2A' }}>
+      <div className="mc-panel" style={{ padding: 12, background: '#3A3A2A' }}>
         <p className="pixel-text-sm" style={{ color: '#FFC107', fontSize: 8, marginBottom: 4 }}>
           💡 Daily Tip
         </p>
@@ -100,7 +100,7 @@ export default function HomePage() {
 
 function StatBox({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="minecraft-panel-inset" style={{ padding: '8px 12px', textAlign: 'center' }}>
+    <div className="mc-panel-inset" style={{ padding: '8px 12px', textAlign: 'center' }}>
       <div style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>{label}</div>
       <div className="pixel-text-sm" style={{ fontSize: 12, color }}>
         {value}

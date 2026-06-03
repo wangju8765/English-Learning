@@ -100,7 +100,7 @@ function AppBootstrap() {
           Oops! Something went wrong.
         </span>
         <span style={{ color: '#AAA', fontSize: 12 }}>{error}</span>
-        <button className="minecraft-button btn-stone" onClick={() => window.location.reload()}>
+        <button className="btn btn-ghost" onClick={() => window.location.reload()}>
           Retry
         </button>
       </div>

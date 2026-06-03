@@ -26,7 +26,7 @@ export default function Layout() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', maxWidth: 800, margin: '0 auto', background: '#1A1A1A' }}>
       {/* TopBar */}
       <header
-        className="minecraft-panel"
+        className="mc-panel"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -66,7 +66,7 @@ export default function Layout() {
               </span>
             )}
           </div>
-          <div className="xp-bar-container">
+          <div className="xp-bar">
             <div className="xp-bar-fill" style={{ width: `${Math.min(xpProgress, 100)}%` }} />
           </div>
           <div className="pixel-text-sm" style={{ color: '#80FF20', fontSize: 7, marginTop: 2 }}>
@@ -82,7 +82,7 @@ export default function Layout() {
 
       {/* BottomNav Hotbar */}
       <nav
-        className="minecraft-panel"
+        className="mc-panel"
         style={{
           margin: '8px',
           padding: '6px 12px',

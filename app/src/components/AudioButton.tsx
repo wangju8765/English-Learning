@@ -32,7 +32,7 @@ export default function AudioButton({ text, rate = 0.85, type = 'word' }: AudioB
 
   return (
     <button
-      className={`audio-button ${speaking ? 'speaking' : ''}`}
+      className={`audio-btn ${speaking ? 'speaking' : ''}`}
       onClick={handleClick}
       title={`Listen: ${text}`}
       aria-label={`Listen to ${text}`}

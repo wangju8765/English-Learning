@@ -17,7 +17,7 @@ export default function ProgressPage() {
   if (allWords.length === 0) {
     return (
       <div className="flex-col" style={{ padding: 24, gap: 16, alignItems: 'center' }}>
-        <div className="minecraft-panel" style={{ padding: 32, textAlign: 'center' }}>
+        <div className="mc-panel" style={{ padding: 32, textAlign: 'center' }}>
           <span style={{ fontSize: 48 }}>🗺️</span>
           <p style={{ color: '#AAA', fontSize: 14, marginTop: 12 }}>
             Your adventure map is empty.
@@ -37,7 +37,7 @@ export default function ProgressPage() {
       </h2>
 
       {/* Stats Overview */}
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
           <MiniStat label="Level" value={`Lv.${level}`} color="#80FF20" />
           <MiniStat label="Total XP" value={`${state.player.xp}`} color="#F5A623" />
@@ -49,7 +49,7 @@ export default function ProgressPage() {
       </div>
 
       {/* Mastery Distribution */}
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <h3 className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9, marginBottom: 12 }}>
           📊 Mastery Distribution
         </h3>
@@ -84,7 +84,7 @@ export default function ProgressPage() {
 
       {/* Session History */}
       {state.sessions.length > 0 && (
-        <div className="minecraft-panel" style={{ padding: 16 }}>
+        <div className="mc-panel" style={{ padding: 16 }}>
           <h3 className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9, marginBottom: 12 }}>
             📜 Recent Adventures
           </h3>
@@ -121,7 +121,7 @@ export default function ProgressPage() {
 
 function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="minecraft-panel-inset" style={{ padding: '8px 8px', textAlign: 'center' }}>
+    <div className="mc-panel-inset" style={{ padding: '8px 8px', textAlign: 'center' }}>
       <div style={{ fontSize: 9, color: '#888', marginBottom: 4 }}>{label}</div>
       <div className="pixel-text-sm" style={{ fontSize: 11, color }}>{value}</div>
     </div>

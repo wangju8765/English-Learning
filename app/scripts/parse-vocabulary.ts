@@ -161,7 +161,9 @@ function parseYamlFrontMatter(content: string, sourceFileName: string): Vocabula
       return match ? match[1].trim().replace(/^"|"$/g, '') : '';
     };
 
-    entry.word = extractYamlField('word', section);
+    // The word value is the first line of the section (split removed "- word:" prefix)
+    const firstLine = section.trim().split('\n')[0].trim();
+    entry.word = firstLine.replace(/^"|"$/g, '');
     entry.phonetic = extractYamlField('phonetic', section);
     entry.partOfSpeech = extractYamlField('pos', section);
     entry.definition = extractYamlField('definition', section);
@@ -170,18 +172,21 @@ function parseYamlFrontMatter(content: string, sourceFileName: string): Vocabula
     if (!entry.word) continue;
     entry.id = normalizeId(entry.word);
 
-    // Parse examples
-    const exampleBlock = section.match(/examples:\s*\n([\s\S]*?)(?=\n\s*\w+:|$)/);
+    // Parse examples — en: and zh: are on separate lines
+    const exampleBlock = section.match(/examples:\s*\n([\s\S]*)/);
     if (exampleBlock) {
       const lines = exampleBlock[1].split('\n');
-      for (const line of lines) {
-        const enMatch = line.match(/en:\s*"(.+?)"/);
-        const zhMatch = line.match(/zh:\s*"(.+?)"/);
-        if (enMatch && zhMatch) {
-          entry.exampleSentences.push({
-            english: enMatch[1],
-            chinese: zhMatch[1],
-          });
+      for (let i = 0; i < lines.length; i++) {
+        const enMatch = lines[i].match(/en:\s*"(.+?)"/);
+        if (enMatch && i + 1 < lines.length) {
+          const zhMatch = lines[i + 1].match(/zh:\s*"(.+?)"/);
+          if (zhMatch) {
+            entry.exampleSentences.push({
+              english: enMatch[1],
+              chinese: zhMatch[1],
+            });
+            i++; // skip the zh line
+          }
         }
       }
     }

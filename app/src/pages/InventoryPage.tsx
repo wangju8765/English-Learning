@@ -31,7 +31,7 @@ export default function InventoryPage() {
         🎒 Inventory
       </h2>
 
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <div
           style={{
             display: 'grid',
@@ -42,7 +42,7 @@ export default function InventoryPage() {
           {items.map((item, i) => (
             <div
               key={i}
-              className="minecraft-panel-inset"
+              className="mc-panel-inset"
               title={item.acquired ? item.name : '???'}
               style={{
                 aspectRatio: '1',
@@ -60,7 +60,7 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <div className="minecraft-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16 }}>
         <h3 className="pixel-text-sm" style={{ color: '#AAA', fontSize: 9, marginBottom: 12 }}>
           📋 Collection Log
         </h3>
