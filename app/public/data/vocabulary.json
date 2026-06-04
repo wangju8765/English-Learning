@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "contentHash": "7ade7080",
-  "generatedAt": "2026-06-04T04:49:40.860Z",
+  "contentHash": "8b674823",
+  "generatedAt": "2026-06-04T05:06:53.403Z",
   "entries": [
     {
       "id": "mac",
@@ -42,7 +42,7 @@
       "word": "OS",
       "phonetic": "/ˌoʊˈes/",
       "partOfSpeech": "n.",
-      "definition": "操作系统（Operating System 的缩写）",
+      "definition": "操作系统（电脑核心管理程序的简称）",
       "exampleSentences": [
         {
           "english": "The OS helps us run apps.",
@@ -429,7 +429,7 @@
       "word": "Int",
       "phonetic": "/ɪnt/",
       "partOfSpeech": "n.",
-      "definition": "整数类型（Integer 的缩写，专门用来存整数的）",
+      "definition": "整数类型（专门用来存整数的数据类型）",
       "exampleSentences": [
         {
           "english": "int age = 10;",
