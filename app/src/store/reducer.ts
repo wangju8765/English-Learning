@@ -65,7 +65,7 @@ export function createInitialState(): AppState {
     settings: {
       soundEnabled: true,
       speechEnabled: true,
-      speechRate: 0.85,
+      speechRate: 1.0,
       dailyWordTarget: 12,
     },
     meta: {

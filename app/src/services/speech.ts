@@ -31,13 +31,19 @@ function pickVoices(): void {
   const voices = synth.getVoices();
   if (voices.length === 0) return;
 
+  // English: prefer native OS voices (most natural), then Google, then any en-US
   cachedEnglishVoice =
-    voices.find((v) => v.lang.startsWith('en') && v.name.includes('Google')) ||
+    voices.find((v) => v.lang.startsWith('en') && v.name.includes('Samantha')) ||  // macOS — very natural
+    voices.find((v) => v.lang.startsWith('en') && v.name.includes('Daniel')) ||    // macOS UK — natural
+    voices.find((v) => v.lang.startsWith('en') && v.name.includes('Karen')) ||     // macOS AU — natural
+    voices.find((v) => v.lang.startsWith('en') && v.name.includes('Google')) ||    // Chrome voices
     voices.find((v) => v.lang.startsWith('en-US')) ||
     voices.find((v) => v.lang.startsWith('en')) ||
     null;
 
+  // Chinese: prefer native OS voices, then Google, then any zh
   cachedChineseVoice =
+    voices.find((v) => v.lang.startsWith('zh') && v.name.includes('Tingting')) || // macOS — good Mandarin
     voices.find((v) => v.lang.startsWith('zh') && v.name.includes('Google')) ||
     voices.find((v) => v.lang.startsWith('zh-CN')) ||
     voices.find((v) => v.lang.startsWith('zh')) ||
@@ -46,7 +52,7 @@ function pickVoices(): void {
   voicesReady = true;
 }
 
-export function speak(text: string, rate: number = 0.85, lang?: 'en' | 'zh'): Promise<void> {
+export function speak(text: string, rate: number = 1.0, lang?: 'en' | 'zh'): Promise<void> {
   return new Promise((resolve) => {
     const synth = getSynth();
     if (!synth) {
@@ -79,16 +85,28 @@ export function speak(text: string, rate: number = 0.85, lang?: 'en' | 'zh'): Pr
   });
 }
 
-export function speakWord(word: string, rate: number = 0.85): Promise<void> {
+export function speakWord(word: string, rate: number = 1.0): Promise<void> {
   return speak(word, rate, 'en');
 }
 
-export function speakSentence(sentence: string, rate: number = 0.9): Promise<void> {
+export function speakSentence(sentence: string, rate: number = 1.0): Promise<void> {
   return speak(sentence, rate, 'en');
 }
 
-export function speakChinese(text: string, rate: number = 0.9): Promise<void> {
+export function speakChinese(text: string, rate: number = 1.0): Promise<void> {
   return speak(text, rate, 'zh');
+}
+
+/** Speak multiple texts sequentially with pauses between each */
+export async function speakSequence(
+  items: Array<{ text: string; lang: 'en' | 'zh'; pauseMs?: number }>,
+  rate: number = 1.0
+): Promise<void> {
+  for (const item of items) {
+    await speak(item.text, rate, item.lang);
+    // Pause between items
+    await new Promise((resolve) => setTimeout(resolve, item.pauseMs ?? 600));
+  }
 }
 
 export function stopSpeech(): void {

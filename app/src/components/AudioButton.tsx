@@ -10,7 +10,7 @@ interface AudioButtonProps {
   type?: 'word' | 'sentence';
 }
 
-export default function AudioButton({ text, rate = 0.85, type = 'word' }: AudioButtonProps) {
+export default function AudioButton({ text, rate = 1.0, type = 'word' }: AudioButtonProps) {
   const [speaking, setSpeaking] = useState(false);
 
   if (!isSpeechSupported()) return null;

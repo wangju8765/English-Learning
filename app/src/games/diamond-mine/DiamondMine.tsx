@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameWord, GameProgress } from '../../types';
 import { DiamondMineEngine, type WallData } from './DiamondMineEngine';
-import { speakWord, speakChinese, preloadVoices, warmUpTTS } from '../../services/speech';
+import { speakWord, speakSequence, preloadVoices, warmUpTTS } from '../../services/speech';
 import { playClick, playBlockBreak, playCombo, playFail, playWallComplete, playGameComplete } from '../../services/sound';
 import { useApp } from '../../store/AppContext';
 
@@ -84,9 +84,15 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
     setProgress(engine.getProgress());
     answerStartRef.current = Date.now();
 
-    // Auto-read the instruction in Chinese
-    const targetDefs = w.remainingTargets.map((t) => t.definition).join('，');
-    speakChinese(`请找出这些单词：${targetDefs}`).catch(() => {});
+    // Auto-read instruction then each target one at a time
+    const targets = w.remainingTargets;
+    const sequence: Array<{ text: string; lang: 'en' | 'zh'; pauseMs?: number }> = [
+      { text: '请找出对应的英文单词', lang: 'zh', pauseMs: 800 },
+    ];
+    for (let i = 0; i < targets.length; i++) {
+      sequence.push({ text: targets[i].definition, lang: 'zh', pauseMs: i < targets.length - 1 ? 1000 : 400 });
+    }
+    speakSequence(sequence).catch(() => {});
   }, [onComplete, soundEnabled]);
 
   const handleBlockClick = useCallback(
