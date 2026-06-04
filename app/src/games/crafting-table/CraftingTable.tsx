@@ -200,7 +200,6 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
   }
 
   const totalSlots = question.correctAnswer.length;
-  const slotsPerRow = Math.min(totalSlots, 6); // fit on one row up to 6 letters
 
   return (
     <div className="flex-col gap-md" style={{ padding: 16 }}>
