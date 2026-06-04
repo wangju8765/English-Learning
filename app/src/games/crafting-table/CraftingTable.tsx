@@ -75,6 +75,8 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
     ]).catch(() => {});
   }, [onComplete, soundEnabled]);
 
+  const handleSubmitRef = useRef<(currentSlots: string[]) => void>(() => {});
+
   const handleLetterClick = useCallback(
     (letter: string, index: number) => {
       if (!question || usedIndices.has(index) || feedback) return;
@@ -92,7 +94,7 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
       if (newSlots.length === question.correctAnswer.length) {
         // Delay slightly so user sees the last letter placed
         setTimeout(() => {
-          handleSubmit(newSlots);
+          handleSubmitRef.current(newSlots);
         }, 300);
       }
     },
@@ -104,23 +106,11 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
       if (feedback) return;
       if (soundEnabled) playClick();
 
-      const removedLetter = slots[slotIndex];
       const newSlots = slots.filter((_, i) => i !== slotIndex);
 
-      // Find the used pool index for this letter
-      const newUsed = new Set(usedIndices);
-      // We need to free one occurrence — find the last used index for this letter
-      const usedArr = Array.from(usedIndices);
-      for (let i = usedArr.length - 1; i >= 0; i--) {
-        const poolIdx = usedArr[i];
-        if (question?.letters[poolIdx] === removedLetter && !newSlots.includes(removedLetter) ? false : true) {
-          // This is tricky — just free all and re-mark based on newSlots
-        }
-      }
-
-      // Simpler approach: rebuild usedIndices from newSlots
+      // Rebuild usedIndices from newSlots
       const rebuiltUsed = new Set<number>();
-      const remaining = [...question?.letters || []];
+      const remaining = [...(question?.letters || [])];
       for (const slotLetter of newSlots) {
         for (let i = 0; i < remaining.length; i++) {
           if (remaining[i] === slotLetter) {
@@ -134,7 +124,7 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
       setSlots(newSlots);
       setUsedIndices(rebuiltUsed);
     },
-    [slots, usedIndices, question, feedback, soundEnabled]
+    [slots, question, feedback, soundEnabled]
   );
 
   const handleSubmit = useCallback(
@@ -173,6 +163,8 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
     },
     [question, feedback, onAnswer, loadQuestion, soundEnabled]
   );
+
+  handleSubmitRef.current = handleSubmit;
 
   const handleClear = useCallback(() => {
     if (feedback) return;
