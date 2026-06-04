@@ -6,7 +6,7 @@ import { XP_CONFIG } from '../../types';
 
 // Common English letters used as distractors
 const DISTRACTOR_POOL = 'eariotnslcudpmhgbfywkvxzjq'.split('');
-const EXTRA_LETTER_COUNT = 3;
+const EXTRA_LETTER_COUNT = 0; // No distractors — the challenge is remembering spelling
 
 export class CraftingTableEngine implements GameEngine {
   private words: GameWord[] = [];
