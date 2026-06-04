@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "contentHash": "04fac2d2",
-  "generatedAt": "2026-06-03T18:07:19.182Z",
+  "contentHash": "7ade7080",
+  "generatedAt": "2026-06-04T04:49:40.860Z",
   "entries": [
     {
       "id": "mac",
@@ -366,6 +366,215 @@
       ],
       "sourceDate": "2026-06-03",
       "parentNotes": "孩子纸上写的是 leaing（漏了 r），正确拼写是 learning。Learning = Learn + ing（正在进行的状态，或作为名词表示\"学问\"）。"
+    },
+    {
+      "id": "string",
+      "word": "String",
+      "phonetic": "/strɪŋ/",
+      "partOfSpeech": "n.",
+      "definition": "字符串；一串字符（编程里用来存文字的）",
+      "exampleSentences": [
+        {
+          "english": "My name is a String.",
+          "chinese": "我的名字是一串字符。"
+        },
+        {
+          "english": "String message = \\",
+          "chinese": "代码写法：定义一个字符串变量叫message。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "孩子笔记写了「字符串」。在代码里，凡是用引号包起来的字，比如 \\\"Hello\\\"，就是 String。"
+    },
+    {
+      "id": "score",
+      "word": "Score",
+      "phonetic": "/skɔːr/",
+      "partOfSpeech": "n.",
+      "definition": "分数；得分；成绩",
+      "exampleSentences": [
+        {
+          "english": "The game score is 100.",
+          "chinese": "游戏分数是100。"
+        },
+        {
+          "english": "High score.",
+          "chinese": "高分。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "编程里经常用来记录游戏赢了得多少分，或者考试考了多少分。"
+    },
+    {
+      "id": "print",
+      "word": "Print",
+      "phonetic": "/prɪnt/",
+      "partOfSpeech": "v.",
+      "definition": "打印；输出；印刷",
+      "exampleSentences": [
+        {
+          "english": "Print this word.",
+          "chinese": "打印/输出这个词。"
+        },
+        {
+          "english": "System.out.print(\\",
+          "chinese": "代码写法：在屏幕上打印Hello。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "编程第一步就是让屏幕显示出字，用的就是 print。关联词：Printer（打印机）。"
+    },
+    {
+      "id": "int",
+      "word": "Int",
+      "phonetic": "/ɪnt/",
+      "partOfSpeech": "n.",
+      "definition": "整数类型（Integer 的缩写，专门用来存整数的）",
+      "exampleSentences": [
+        {
+          "english": "int age = 10;",
+          "chinese": "代码写法：定义一个整数变量age，值是10。"
+        },
+        {
+          "english": "int numberOfStudents = 30;",
+          "chinese": "代码写法：定义一个整数变量numberOfStudents，值是30。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "孩子在这里打了个「？」，问是不是整数类型。Bingo！完全正确！它就是 Integer 的缩写。"
+    },
+    {
+      "id": "scan",
+      "word": "Scan",
+      "phonetic": "/skæn/",
+      "partOfSpeech": "v.",
+      "definition": "扫描",
+      "exampleSentences": [
+        {
+          "english": "Use a scanner to read the code.",
+          "chinese": "用扫描仪读码。"
+        },
+        {
+          "english": "Scanner input = new Scanner(System.in);",
+          "chinese": "代码写法：准备一个扫描器来接收输入。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "和 Print 对应，Print 是往外显示，Scan 是往里读取。编程里常用 Scanner 来接收键盘输入。"
+    },
+    {
+      "id": "scanner",
+      "word": "Scanner",
+      "phonetic": "/ˈskænər/",
+      "partOfSpeech": "n.",
+      "definition": "扫描仪；扫描器",
+      "exampleSentences": [
+        {
+          "english": "Use a scanner to read the code.",
+          "chinese": "用扫描仪读码。"
+        },
+        {
+          "english": "Scanner input = new Scanner(System.in);",
+          "chinese": "代码写法：准备一个扫描器来接收输入。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "Scan 的名词形式。编程里常用 Scanner 来接收键盘输入。"
+    },
+    {
+      "id": "input",
+      "word": "Input",
+      "phonetic": "/ˈɪnpʊt/",
+      "partOfSpeech": "n./v.",
+      "definition": "输入",
+      "exampleSentences": [
+        {
+          "english": "Keyboard input.",
+          "chinese": "键盘输入。"
+        },
+        {
+          "english": "Get user input.",
+          "chinese": "获取用户输入。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "In 是「进」，把数据「进」到电脑里。对应 Import（导入）。编程里指用户告诉电脑的信息（比如打字、点击）。"
+    },
+    {
+      "id": "output",
+      "word": "Output",
+      "phonetic": "/ˈaʊtpʊt/",
+      "partOfSpeech": "n./v.",
+      "definition": "输出",
+      "exampleSentences": [
+        {
+          "english": "Show the output on screen.",
+          "chinese": "在屏幕上显示输出。"
+        },
+        {
+          "english": "Input and output.",
+          "chinese": "输入与输出（常缩写为 I/O）。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "Out 是「出」，把数据「出」给屏幕或文件。对应 Export（导出）。和 Input 是一对反义词。Print 其实就是一种 Output。"
+    },
+    {
+      "id": "value",
+      "word": "Value",
+      "phonetic": "/ˈvæljuː/",
+      "partOfSpeech": "n.",
+      "definition": "价值；数值",
+      "exampleSentences": [
+        {
+          "english": "The value of X is 5.",
+          "chinese": "X的值是5。"
+        },
+        {
+          "english": "Get the maximum value.",
+          "chinese": "获取最大值。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "孩子非常聪明地把 Value 和「取值」联系起来了！在编程里，Value 就是指变量里具体存着的那个数或那个字。"
+    },
+    {
+      "id": "import",
+      "word": "Import",
+      "phonetic": "/ˈɪmpɔːrt/",
+      "partOfSpeech": "v.",
+      "definition": "导入；进口",
+      "exampleSentences": [
+        {
+          "english": "Import a library.",
+          "chinese": "导入一个库文件。"
+        },
+        {
+          "english": "We import goods from other countries.",
+          "chinese": "我们从国外进口货物。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "Im（向内）+ Port（港口）→ 货物进港！编程里开头经常写 import，意思是「借来用一下别人的工具包」。"
+    },
+    {
+      "id": "export",
+      "word": "Export",
+      "phonetic": "/ˈekspɔːrt/",
+      "partOfSpeech": "v.",
+      "definition": "导出；出口",
+      "exampleSentences": [
+        {
+          "english": "Export the file.",
+          "chinese": "导出文件。"
+        },
+        {
+          "english": "China exports many products.",
+          "chinese": "中国出口很多产品。"
+        }
+      ],
+      "sourceDate": "2026-06-04",
+      "parentNotes": "Ex（向外）+ Port（港口）→ 货物出港！和 Import 相反，把做好的程序或文件给别人用。"
     }
   ]
 }

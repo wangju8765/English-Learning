@@ -41,8 +41,8 @@ export class CraftingTableEngine implements GameEngine {
       }
     }
 
-    // Combine and shuffle all letters
-    const allLetters = [...letters, ...distractors].sort(() => Math.random() - 0.5);
+    // Combine and sort alphabetically for easy scanning
+    const allLetters = [...letters, ...distractors].sort();
 
     return {
       wordId: word.id,

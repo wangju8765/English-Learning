@@ -200,6 +200,8 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
   }
 
   const totalSlots = question.correctAnswer.length;
+  // Adaptive slot width: narrower for longer words to prevent wrapping
+  const slotWidth = totalSlots > 9 ? 30 : totalSlots > 7 ? 36 : 42;
 
   return (
     <div className="flex-col gap-md" style={{ padding: 16 }}>
@@ -266,13 +268,13 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
       </div>
 
       {/* Crafting slots */}
-      <div className="mc-panel" style={{ padding: 16 }}>
+      <div className="mc-panel" style={{ padding: 16, overflowX: 'auto' }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'center',
-            gap: 8,
-            flexWrap: 'wrap',
+            gap: totalSlots > 8 ? 4 : 8,
+            flexWrap: 'nowrap',
           }}
         >
           {Array.from({ length: totalSlots }).map((_, i) => {
@@ -286,9 +288,10 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
                 onClick={() => filled && handleRemoveLetter(i)}
                 disabled={!filled || !!feedback}
                 style={{
-                  width: 42,
+                  width: slotWidth,
+                  minWidth: slotWidth,
                   height: 48,
-                  fontSize: 18,
+                  fontSize: totalSlots > 8 ? 14 : 18,
                   cursor: filled && !feedback ? 'pointer' : 'default',
                   background: filled
                     ? 'var(--color-surface)'
