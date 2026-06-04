@@ -265,15 +265,15 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
         )}
       </div>
 
-      {/* Crafting slots — scrollable for long words */}
-      <div className="mc-panel" style={{ padding: 16, overflowX: 'auto' }}>
+      {/* Crafting slots — proportional shrink + scroll for long words */}
+      <div className="mc-panel" style={{ padding: 12, overflowX: 'auto' }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'center',
-            gap: 6,
+            gap: 4,
             flexWrap: 'nowrap',
-            minWidth: 'fit-content',
+            maxWidth: '100%',
           }}
         >
           {Array.from({ length: totalSlots }).map((_, i) => {
@@ -287,11 +287,11 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
                 onClick={() => filled && handleRemoveLetter(i)}
                 disabled={!filled || !!feedback}
                 style={{
-                  width: 38,
-                  minWidth: 38,
-                  height: 44,
+                  flex: '1 1 0',
+                  minWidth: 26,
+                  maxWidth: 44,
+                  height: 42,
                   fontSize: 16,
-                  flexShrink: 0,
                   cursor: filled && !feedback ? 'pointer' : 'default',
                   background: filled
                     ? 'var(--color-surface)'
@@ -311,13 +311,13 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
         </div>
       </div>
 
-      {/* Letter pool — compact grid, large buttons */}
+      {/* Letter pool — responsive grid, comfortable touch targets */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 10,
-          maxWidth: 300,
+          gridTemplateColumns: `repeat(auto-fit, minmax(48px, 1fr))`,
+          gap: 8,
+          maxWidth: 360,
           margin: '0 auto',
           padding: '4px 0',
         }}
@@ -331,16 +331,15 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
               onClick={() => handleLetterClick(letter, i)}
               disabled={isUsed || !!feedback}
               style={{
-                width: '100%',
                 aspectRatio: '1',
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: 700,
+                minWidth: 0,
+                minHeight: 0,
+                padding: 4,
                 opacity: isUsed ? 0.15 : 1,
                 cursor: isUsed || feedback ? 'default' : 'pointer',
                 transition: 'all 0.12s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
               }}
             >
               {letter.toUpperCase()}

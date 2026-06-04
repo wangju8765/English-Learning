@@ -265,7 +265,7 @@ body {
   transition: width 0.3s steps(5);
 }
 
-/* --- Stone block (game tile for Diamond Mine) --- */
+/* --- Stone block (game tile for Diamond Mine + Crafting Table) --- */
 .stone-block {
   min-width: 80px;
   min-height: 56px;
@@ -281,13 +281,14 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: transform 0.1s, filter 0.15s;
-  font-family: var(--font-pixel);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 9px;
   color: #FFF;
   text-shadow: 1px 1px 0 rgba(0,0,0,0.7);
   text-align: center;
-  word-break: break-word;
-  hyphens: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   user-select: none;
   border-radius: 2px;
   position: relative;
