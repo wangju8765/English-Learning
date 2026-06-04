@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { AppProvider, useApp } from './store/AppContext';
+import { preloadVoices } from './services/speech';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import QuestPage from './pages/QuestPage';
@@ -39,6 +40,9 @@ function AppBootstrap() {
     async function bootstrap() {
       try {
         await initializeApp();
+
+        // Preload TTS voices
+        preloadVoices();
 
         // Load vocabulary data
         try {

@@ -4,8 +4,9 @@
 import type { GameEngine, GameWord, Question, AnswerResult, GameProgress, MasteryLevel } from '../../types';
 import { XP_CONFIG } from '../../types';
 
-const WALL_SIZE = 12; // 3×4 grid of stone blocks
-const TARGETS_PER_WALL = 3; // Find 3 correct words on each wall
+const WALL_SIZE = 9; // 3×3 grid of stone blocks
+const TARGETS_PER_WALL = 2; // Find 2 correct words on each wall
+const MAX_WALLS = 5; // Cap sessions to avoid overly long games
 
 export class DiamondMineEngine implements GameEngine {
   private words: GameWord[] = [];
@@ -146,9 +147,9 @@ export class DiamondMineEngine implements GameEngine {
     const walls: WallData[] = [];
     const sorted = [...words].sort((a, b) => a.masteryLevel - b.masteryLevel);
 
-    // Each wall: 12 blocks, 3 targets
+    // Each wall: WALL_SIZE blocks, TARGETS_PER_WALL targets, capped at MAX_WALLS
     let idx = 0;
-    while (idx < sorted.length) {
+    while (idx < sorted.length && walls.length < MAX_WALLS) {
       const targets = sorted.slice(idx, idx + TARGETS_PER_WALL);
       if (targets.length === 0) break;
 

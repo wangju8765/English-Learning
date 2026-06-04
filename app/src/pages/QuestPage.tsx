@@ -14,7 +14,7 @@ export default function QuestPage() {
   const allWords = Object.values(state.words);
 
   const todaySessions = state.sessions.filter((s) => s.date === today);
-  const completedModes = new Set(todaySessions.map((s) => s.gameMode));
+  const completedModes = new Set(todaySessions.filter((s) => s.completed).map((s) => s.gameMode));
   const dailyQuestComplete = completedModes.size >= 2;
 
   const handleStartGame = (mode: GameModeMeta) => {

@@ -1,10 +1,10 @@
 // ============================================================
-// Diamond Mine — 12-block wall, multi-target word mining
+// Diamond Mine — 9-block wall (3×3), 2-target word mining
 // ============================================================
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameWord, GameProgress } from '../../types';
 import { DiamondMineEngine, type WallData } from './DiamondMineEngine';
-import { speakWord } from '../../services/speech';
+import { speakWord, speakChinese, preloadVoices, warmUpTTS } from '../../services/speech';
 
 interface DiamondMineProps {
   words: GameWord[];
@@ -41,6 +41,12 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
     const engine = new DiamondMineEngine();
     engine.initialize(words);
     engineRef.current = engine;
+
+    // Warm up TTS engine
+    preloadVoices().then(() => {
+      warmUpTTS();
+    });
+
     loadWall(engine);
     answerStartRef.current = Date.now();
   }, [words]);
@@ -72,6 +78,10 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
     setBlockStates(states);
     setProgress(engine.getProgress());
     answerStartRef.current = Date.now();
+
+    // Auto-read the instruction in Chinese
+    const targetDefs = w.remainingTargets.map((t) => t.definition).join('，');
+    speakChinese(`请找出这些单词：${targetDefs}`).catch(() => {});
   }, [onComplete]);
 
   const handleBlockClick = useCallback(
@@ -163,9 +173,9 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
     [wall, blockStates, feedback, onAnswer, loadWall]
   );
 
-  // Calculate which blocks go in which row for the 3×4 grid
+  // Calculate which blocks go in which row for the 3×3 grid
   const displayBlocks = wall ? wall.blocks : [];
-  const gridCols = 4;
+  const gridCols = 3;
 
   if (isComplete) {
     return (
@@ -274,14 +284,14 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
         )}
       </div>
 
-      {/* The Mine Wall — 3×4 grid */}
+      {/* The Mine Wall — 3×3 grid */}
       <div className="cave-bg" style={{ padding: 12, borderRadius: 4 }}>
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
             gap: 8,
-            maxWidth: 560,
+            maxWidth: 420,
             margin: '0 auto',
           }}
         >
@@ -292,7 +302,7 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
 
             // Calculate word length class for font sizing
             const wordLen = blockWord.length;
-            const fontSize = wordLen > 12 ? 7 : wordLen > 9 ? 8 : wordLen > 6 ? 9 : 10;
+            const fontSize = wordLen > 12 ? 6 : wordLen > 9 ? 7 : wordLen > 6 ? 9 : 11;
 
             return (
               <button
@@ -312,9 +322,34 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
                   padding: '6px 8px',
                   opacity: isFound ? 0.4 : 1,
                   cursor: isFound ? 'default' : 'pointer',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  position: 'relative',
                 }}
               >
-                {isFound ? '💎' : blockWord}
+                {isFound ? (
+                  '💎'
+                ) : (
+                  <>
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        speakWord(blockWord).catch(() => {});
+                      }}
+                      style={{
+                        fontSize: 8,
+                        marginRight: 2,
+                        cursor: 'pointer',
+                        opacity: 0.6,
+                      }}
+                      title={`听发音: ${blockWord}`}
+                    >
+                      🔊
+                    </span>
+                    {blockWord}
+                  </>
+                )}
               </button>
             );
           })}
