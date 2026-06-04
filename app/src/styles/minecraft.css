@@ -320,6 +320,17 @@ body {
   border-color: #80F0FF #1B8FA8 #0D5A6E #4DD9F5;
 }
 
+/* --- Crafting Table slots --- */
+.crafting-slot {
+  background: rgba(255,255,255,0.04);
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+.crafting-slot:hover {
+  border-color: rgba(255,255,255,0.3);
+}
+
 /* --- Diamond Mine cave background --- */
 .cave-bg {
   background:
