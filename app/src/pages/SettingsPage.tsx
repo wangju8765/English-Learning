@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { isSpeechSupported } from '../services/speech';
+import { setSoundEnabled } from '../services/sound';
 
 export default function SettingsPage() {
   const { state, dispatch, exportAppState, importAppState } = useApp();
@@ -93,9 +94,11 @@ export default function SettingsPage() {
           <ToggleRow
             label="Sound Effects"
             enabled={settings.soundEnabled}
-            onChange={() =>
-              dispatch({ type: 'UPDATE_SETTINGS', payload: { soundEnabled: !settings.soundEnabled } })
-            }
+            onChange={() => {
+              const next = !settings.soundEnabled;
+              setSoundEnabled(next);
+              dispatch({ type: 'UPDATE_SETTINGS', payload: { soundEnabled: next } });
+            }}
           />
           <ToggleRow
             label="Speech (TTS)"

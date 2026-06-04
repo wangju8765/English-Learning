@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { AppProvider, useApp } from './store/AppContext';
 import { preloadVoices } from './services/speech';
+import { setSoundEnabled } from './services/sound';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import QuestPage from './pages/QuestPage';
@@ -32,9 +33,14 @@ const router = createHashRouter([
 ]);
 
 function AppBootstrap() {
-  const { initializeApp, mergeVocabulary } = useApp();
+  const { state, initializeApp, mergeVocabulary } = useApp();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync sound setting to the audio service
+  useEffect(() => {
+    setSoundEnabled(state.settings.soundEnabled);
+  }, [state.settings.soundEnabled]);
 
   useEffect(() => {
     async function bootstrap() {

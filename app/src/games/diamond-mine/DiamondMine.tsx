@@ -5,6 +5,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameWord, GameProgress } from '../../types';
 import { DiamondMineEngine, type WallData } from './DiamondMineEngine';
 import { speakWord, speakChinese, preloadVoices, warmUpTTS } from '../../services/speech';
+import { playClick, playBlockBreak, playCombo, playFail, playWallComplete, playGameComplete } from '../../services/sound';
+import { useApp } from '../../store/AppContext';
 
 interface DiamondMineProps {
   words: GameWord[];
@@ -20,6 +22,8 @@ interface BlockState {
 }
 
 export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMineProps) {
+  const { state } = useApp();
+  const soundEnabled = state.settings.soundEnabled;
   const engineRef = useRef<DiamondMineEngine | null>(null);
   const [wall, setWall] = useState<WallData | null>(null);
   const [blockStates, setBlockStates] = useState<Map<string, BlockState>>(new Map());
@@ -57,6 +61,7 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
       setIsComplete(true);
       setProgress(engine.getProgress());
       onComplete(engine.getProgress());
+      if (soundEnabled) playGameComplete();
       return;
     }
 
@@ -82,14 +87,16 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
     // Auto-read the instruction in Chinese
     const targetDefs = w.remainingTargets.map((t) => t.definition).join('，');
     speakChinese(`请找出这些单词：${targetDefs}`).catch(() => {});
-  }, [onComplete]);
+  }, [onComplete, soundEnabled]);
 
   const handleBlockClick = useCallback(
     (blockWord: string) => {
       if (!engineRef.current || !wall || feedback) return;
 
-      const state = blockStates.get(blockWord);
-      if (!state || state.found) return;
+      const blockState = blockStates.get(blockWord);
+      if (!blockState || blockState.found) return;
+
+      if (soundEnabled) playClick();
 
       const responseTimeMs = Date.now() - answerStartRef.current;
       const wallIndexBefore = engineRef.current.getCurrentWallIndex();
@@ -98,12 +105,19 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
       // Update block state
       const newStates = new Map(blockStates);
       if (result.correct) {
-        newStates.set(blockWord, { ...state, found: true, status: 'correct' });
+        newStates.set(blockWord, { ...blockState, found: true, status: 'correct' });
         speakWord(blockWord).catch(() => {});
+
+        if (soundEnabled) {
+          playBlockBreak();
+          const newCombo = engineRef.current.getComboCount();
+          if (newCombo >= 2) playCombo(newCombo);
+        }
 
         // Check if wall advanced (all targets found on this wall)
         const wallIndexAfter = engineRef.current.getCurrentWallIndex();
         if (wallIndexAfter !== wallIndexBefore) {
+          if (soundEnabled) playWallComplete();
           // Wall complete — move to next after delay
           setTimeout(() => {
             if (engineRef.current) {
@@ -112,7 +126,8 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
           }, 1500);
         }
       } else {
-        newStates.set(blockWord, { ...state, status: 'incorrect' });
+        if (soundEnabled) playFail();
+        newStates.set(blockWord, { ...blockState, status: 'incorrect' });
         // Highlight the first remaining target
         const curWall = engineRef.current.getCurrentWall();
         const firstTarget = curWall?.remainingTargets[0];
@@ -170,7 +185,7 @@ export default function DiamondMine({ words, onAnswer, onComplete }: DiamondMine
 
       setProgress(engineRef.current.getProgress());
     },
-    [wall, blockStates, feedback, onAnswer, loadWall]
+    [wall, blockStates, feedback, onAnswer, loadWall, soundEnabled]
   );
 
   // Calculate which blocks go in which row for the 3×3 grid
