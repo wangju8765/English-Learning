@@ -7,6 +7,7 @@ import { useApp } from '../store/AppContext';
 import type { GameModeId, GameProgress } from '../types';
 import DiamondMine from '../games/diamond-mine/DiamondMine';
 import CraftingTable from '../games/crafting-table/CraftingTable';
+import EnderPearlChallenge from '../games/ender-pearl/EnderPearlChallenge';
 
 export default function GamePage() {
   const { modeId } = useParams<{ modeId: string }>();
@@ -156,7 +157,15 @@ export default function GamePage() {
         />
       )}
 
-      {gameMode !== 'diamond_mine' && gameMode !== 'crafting_table' && (
+      {gameMode === 'ender_pearl' && (
+        <EnderPearlChallenge
+          words={words}
+          onAnswer={handleAnswer}
+          onComplete={handleComplete}
+        />
+      )}
+
+      {gameMode !== 'diamond_mine' && gameMode !== 'crafting_table' && gameMode !== 'ender_pearl' && (
         <div className="flex-center" style={{ height: 200, padding: 24 }}>
           <div className="mc-panel" style={{ padding: 24, textAlign: 'center' }}>
             <span style={{ fontSize: 48 }}>🚧</span>
