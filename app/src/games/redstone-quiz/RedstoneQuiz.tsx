@@ -262,12 +262,12 @@ export default function RedstoneQuiz({ words, onAnswer, onComplete }: RedstoneQu
           ))}
         </div>
 
-        {/* Chinese translation hint */}
+        {/* Chinese translation hint — larger for readability */}
         <div
           style={{
-            fontSize: 12,
-            color: 'var(--text-muted)',
-            fontStyle: 'italic',
+            fontSize: 16,
+            color: '#D4D4E8',
+            marginTop: 4,
           }}
         >
           💡 {questionData.sentenceChinese}
