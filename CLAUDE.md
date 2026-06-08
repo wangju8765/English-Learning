@@ -58,6 +58,7 @@ npx vitest               # 运行测试
 - **Hash 路由** — GitHub Pages 不支持 SPA fallback
 - **构建时解析词汇** — md → JSON，前端只读 JSON
 - **IndexedDB 主存储** — 不受 localStorage 5MB 限制
+- **无文本输入框** — 所有游戏使用字母块点击拼词，避免系统 IME/键盘问题
 
 ## 项目结构
 
@@ -68,36 +69,61 @@ vocabulary/           ← 每日词汇 md（用户维护）
 app/
   src/
     App.tsx           ← 根组件 + 路由
-    components/       ← 共享 UI 组件
-    games/            ← 2 种已实现的游戏模式
+    components/       ← 共享 UI 组件（Layout, AudioButton, WordDisplay）
+    games/            ← 3 种已实现的游戏模式
       diamond-mine/    ← ⛏️ 钻石矿工（3×3 词义识别）
       crafting-table/  ← 🛠️ 工作台（点击拼词）
-    pages/            ← 页面级组件
-    services/         ← IndexedDB、语音、音效
-    store/            ← React Context + useReducer
-    styles/           ← CSS Modules + 主题变量
-    types/            ← TypeScript 类型定义
+      ender-pearl/     ← 🎯 末影珍珠（计时点击拼词）
+    pages/            ← 页面级组件（Home, Quest, Game, Progress, WordBook, Inventory, Settings）
+    services/         ← IndexedDB、语音、音效、间隔重复
+    store/            ← React Context + useReducer（AppContext, reducer）
+    styles/           ← CSS Custom Properties + 主题变量
+    types/            ← TypeScript 类型定义（WordState, GameEngine, XP_CONFIG 等）
     utils/            ← 工具函数
   scripts/
     parse-vocabulary.ts  ← md → JSON 解析器
   public/data/
-    vocabulary.json   ← 解析生成的词汇数据（自动生成）
+    vocabulary.json   ← 解析生成的词汇数据（自动生成，33 个词条）
 .github/workflows/
   deploy.yml          ← CI/CD 自动部署
 ```
 
-## 游戏模式
+## 游戏模式（3/5 已实现）
 
-当前已实现：
-- **⛏️ Diamond Mine（钻石矿工）** — 3×3 矿墙，9 块砖中寻找对应中文释义的英文词（每面 2 个目标，最多 5 面墙）。系统 sans-serif 字体 + nowrap 防断词。词义识别训练。
-- **🛠️ Crafting Table（工作台）** — 0 干扰字母，字母表序排列，4 列响应式网格大方块点击拼词。拼写训练。
+### ⛏️ Diamond Mine（钻石矿工）
+- 词义识别 — 3×3 矿墙，9 块砖中寻找对应中文释义的英文词（每面 2 个目标，最多 5 面墙）
+- Combo 连击 XP 加成，🔊 手动听发音
+- 难度 ⭐
 
-规划中：末影珍珠限时挑战、红石问答、下界传送门逃脱。
+### 🛠️ Crafting Table（工作台）
+- 拼写训练 — 0 干扰字母，字母表序排列，4 列响应式网格大方块点击拼词
+- 错误时字母槽填入正确答案 + 红色面板 + 朗读，停留 3.5s
+- 难度 ⭐⭐
+
+### 🎯 Ender Pearl Challenge（末影珍珠挑战）
+- 计时拼词 — 2 干扰字母，倒计时（10s 起，词长×3）内点击字母拼出单词
+- 速度 XP 加成 + combo 连击，末影主题紫色 UI + 🎯 计时条绿→黄→红渐变
+- 难度 ⭐⭐⭐
+
+### 规划中
+- 🔴 Redstone Quiz（红石问答）— 句子语境填空
+- 🌑 Nether Portal Escape（下界传送门逃脱）— 综合 BOSS 关
+
+## 语音交互模式
+
+出题时统一三段式朗读：`单词 → 指令 → 释义 → 单词`（操作前听 2 遍英文）
+正确后读第 3 遍强化，错误时 0.85×慢速朗读 + 视觉停留 3.5s。
+
+## 激励系统
+
+- **XP**：基础 +10，速度加成 +1~5，Combo (combo-1)×2，Perfect Session +25，Daily Quest +50，Streak ×5
+- **每日任务**：完成 2 个不同游戏模式 = +50 XP，自动检测发放
+- **Streak**：连续学习天数，断签归零，≥3 天火焰脉冲动画
 
 ## 设计约束
 
 - **深色 HUD 风格**（非银色 GUI），高对比度，保护儿童视力
-- **字体策略**：像素字体 `Press Start 2P` 用于标题/HUD/导航（Minecraft 氛围），中文 `Noto Sans SC` 用于正文，系统原生 sans-serif 用于英文单词/字母显示（保证字母形状标准，适合拼写学习）
+- **字体策略**：像素字体 `Press Start 2P` 用于标题/HUD/导航（Minecraft 氛围），中文 `Noto Sans SC` 用于正文，系统原生 sans-serif 用于英文单词/字母显示
 - **6 级间隔重复**（Stone → Coal → Iron → Gold → Diamond → Netherite），基于 SM-2 算法
 - **目标用户是 10 岁孩子**，操作者是非技术背景的父亲 — UI 要直观，流程要简单
 
