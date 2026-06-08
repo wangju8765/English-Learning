@@ -5,8 +5,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameWord, GameProgress } from '../../types';
 import { RedstoneQuizEngine } from './RedstoneQuizEngine';
 import type { QuestionData } from './RedstoneQuizEngine';
-import { speakWord, speakSequence } from '../../services/speech';
-import { playClick, playBlockBreak, playFail, playGameComplete } from '../../services/sound';
+import { speakWord, speak, stopSpeech } from '../../services/speech';
+import { playClick, playBlockBreak, playFail, playGameComplete, playBeep } from '../../services/sound';
 import { useApp } from '../../store/AppContext';
 
 interface RedstoneQuizProps {
@@ -33,15 +33,42 @@ export default function RedstoneQuiz({ words, onAnswer, onComplete }: RedstoneQu
   const [isComplete, setIsComplete] = useState(false);
   const answerStartRef = useRef<number>(Date.now());
 
+  // Speech management
+  const isFirstQuestionRef = useRef<boolean>(true);
+  const speechIdRef = useRef<number>(0);
+  const nextQuestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedbackSpeechTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (nextQuestionTimerRef.current) clearTimeout(nextQuestionTimerRef.current);
+      if (feedbackSpeechTimerRef.current) clearTimeout(feedbackSpeechTimerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     const engine = new RedstoneQuizEngine();
     engine.initialize(words);
     engineRef.current = engine;
+    isFirstQuestionRef.current = true;
     loadQuestion(engine);
     answerStartRef.current = Date.now();
   }, [words]);
 
   const loadQuestion = useCallback((engine: RedstoneQuizEngine) => {
+    // Clear any pending timers from previous question
+    if (nextQuestionTimerRef.current) {
+      clearTimeout(nextQuestionTimerRef.current);
+      nextQuestionTimerRef.current = null;
+    }
+    if (feedbackSpeechTimerRef.current) {
+      clearTimeout(feedbackSpeechTimerRef.current);
+      feedbackSpeechTimerRef.current = null;
+    }
+    // Stop any ongoing speech from previous question
+    stopSpeech();
+
     const q = engine.nextQuestion();
     if (!q) {
       setIsComplete(true);
@@ -57,12 +84,21 @@ export default function RedstoneQuiz({ words, onAnswer, onComplete }: RedstoneQu
     setFeedback(null);
     answerStartRef.current = Date.now();
 
-    // Speech: instruction only — don't read the answer!
-    // The sentence is shown visually; reading the word/sentence would give away the answer.
+    // Speech: instruction only on first question, always read sentence with beep
+    const speechId = ++speechIdRef.current;
+    const isFirst = isFirstQuestionRef.current;
+    isFirstQuestionRef.current = false;
+
     (async () => {
-      await speakSequence([
-        { text: '选择正确的单词填入句子', lang: 'zh', pauseMs: 600 },
-      ]);
+      if (isFirst) {
+        await speak('选择正确的单词填入句子', 1.0, 'zh');
+        if (speechId !== speechIdRef.current) return;
+        await new Promise(r => setTimeout(r, 600));
+        if (speechId !== speechIdRef.current) return;
+      }
+      // Read the sentence with a beep covering the blank
+      const trimmedParts = q.prompt.split('______').map(p => p.trim());
+      await speakSentenceWithBlank(trimmedParts, soundEnabled, speechId, speechIdRef);
     })().catch(() => {});
   }, [onComplete, soundEnabled]);
 
@@ -89,16 +125,13 @@ export default function RedstoneQuiz({ words, onAnswer, onComplete }: RedstoneQu
         onAnswer(questionData.wordId, true, responseTimeMs);
         setProgress(engineRef.current.getProgress());
 
-        // Read the full sentence as reinforcement (post-answer, not pre-answer)
-        setTimeout(() => {
-          const data = engineRef.current?.getCurrentQuestionData();
-          if (data) {
-            // Read the original sentence with the inflected form
-            speakWord(data.sentenceEnglish, 0.9).catch(() => {});
-          }
+        // Read the CORRECT WORD as reinforcement (not the full sentence — that would reveal the answer)
+        feedbackSpeechTimerRef.current = setTimeout(() => {
+          speakWord(result.correctAnswer, 0.9).catch(() => {});
         }, 200);
 
-        setTimeout(() => {
+        nextQuestionTimerRef.current = setTimeout(() => {
+          nextQuestionTimerRef.current = null;
           if (engineRef.current) loadQuestion(engineRef.current);
         }, 2000);
       } else {
@@ -113,11 +146,13 @@ export default function RedstoneQuiz({ words, onAnswer, onComplete }: RedstoneQu
         onAnswer(questionData.wordId, false, responseTimeMs);
         setProgress(engineRef.current.getProgress());
 
-        setTimeout(() => {
+        // Read the correct word for learning
+        feedbackSpeechTimerRef.current = setTimeout(() => {
           speakWord(result.correctAnswer, 0.85).catch(() => {});
         }, 400);
 
-        setTimeout(() => {
+        nextQuestionTimerRef.current = setTimeout(() => {
+          nextQuestionTimerRef.current = null;
           if (engineRef.current) loadQuestion(engineRef.current);
         }, 3500);
       }
@@ -365,6 +400,33 @@ export default function RedstoneQuiz({ words, onAnswer, onComplete }: RedstoneQu
       )}
     </div>
   );
+}
+
+/**
+ * Speak a sentence where the blank (______) is replaced by a beep sound.
+ * Interleaves speech parts with short beep tones so the listener hears
+ * the complete sentence structure without the answer being revealed.
+ */
+async function speakSentenceWithBlank(
+  parts: string[],
+  soundEnabled: boolean,
+  speechId: number,
+  speechIdRef: React.MutableRefObject<number>,
+): Promise<void> {
+  for (let i = 0; i < parts.length; i++) {
+    if (speechId !== speechIdRef.current) return; // Aborted by next question
+    const part = parts[i];
+    if (part) {
+      await speak(part, 0.9, 'en');
+      if (speechId !== speechIdRef.current) return;
+    }
+    if (i < parts.length - 1) {
+      // Beep to mask the blank
+      if (soundEnabled) playBeep();
+      await new Promise(r => setTimeout(r, 350));
+      if (speechId !== speechIdRef.current) return;
+    }
+  }
 }
 
 function StatBox({ label, value, color }: { label: string; value: string; color: string }) {

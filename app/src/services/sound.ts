@@ -153,3 +153,8 @@ export function playGameComplete(): void {
 export function playXpGain(): void {
   playTone('sine', 1600, 0.06, 0.05, 2000);
 }
+
+/** Short beep to mask a blank in sentence reading — like a censored word */
+export function playBeep(): void {
+  playTone('square', 800, 0.12, 0.06, 600);
+}
