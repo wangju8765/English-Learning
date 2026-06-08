@@ -231,18 +231,44 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
       const { completed, durationSeconds } = action.payload;
       const { gameMode, words, results, xpEarned } = state.activeSession;
+      const today = getTodayDate();
 
-      // Perfect session bonus
+      // --- Calculate bonuses ---
       const totalQuestions = words.length;
       const correctCount = Object.values(results).filter(Boolean).length;
-      let totalXp = xpEarned;
+
+      let bonusXp = 0;
+      const bonusReasons: string[] = [];
+
+      // Perfect session bonus
       if (completed && correctCount === totalQuestions && totalQuestions > 0) {
-        totalXp += XP_CONFIG.PERFECT_SESSION_BONUS;
+        bonusXp += XP_CONFIG.PERFECT_SESSION_BONUS;
+        bonusReasons.push('Perfect!');
       }
+
+      // Daily quest bonus: complete 2 game modes in one day
+      const completedTodayBefore = state.sessions.filter(
+        (s) => s.date === today && s.completed
+      ).length;
+      if (completed && completedTodayBefore < 2 && completedTodayBefore + 1 >= 2) {
+        bonusXp += XP_CONFIG.DAILY_QUEST_BONUS;
+        bonusReasons.push('Daily Quest Complete!');
+      }
+
+      // Streak bonus: awarded per completed session, capped
+      const streakDays = state.player.streakDays;
+      if (completed && streakDays > 0) {
+        const streakBonus = Math.min(streakDays, XP_CONFIG.STREAK_BONUS_CAP / XP_CONFIG.STREAK_BONUS_PER_DAY)
+          * XP_CONFIG.STREAK_BONUS_PER_DAY;
+        bonusXp += streakBonus;
+        bonusReasons.push(`${streakDays}d Streak!`);
+      }
+
+      const totalXp = xpEarned + bonusXp;
 
       const sessionRecord: SessionRecord = {
         id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        date: getTodayDate(),
+        date: today,
         gameMode,
         wordsReviewed: words.map((w) => w.id),
         results,
@@ -251,13 +277,14 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         completed,
       };
 
-      const finalXp = state.player.xp + (completed && correctCount === totalQuestions ? XP_CONFIG.PERFECT_SESSION_BONUS : 0);
+      const finalXp = state.player.xp + bonusXp;
 
       return {
         ...state,
         player: {
           ...state.player,
           xp: finalXp,
+          lastActiveDate: today,
           totalSessionsCompleted: completed
             ? state.player.totalSessionsCompleted + 1
             : state.player.totalSessionsCompleted,

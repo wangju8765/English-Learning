@@ -61,7 +61,14 @@ export default function Layout() {
               Lv.{level}
             </span>
             {state.player.streakDays > 0 && (
-              <span className="pixel-text-sm" style={{ color: '#FFA500', fontSize: 8 }}>
+              <span
+                className="pixel-text-sm"
+                style={{
+                  color: '#FFA500',
+                  fontSize: 8,
+                  animation: state.player.streakDays >= 3 ? 'pulse 0.8s ease-in-out infinite' : undefined,
+                }}
+              >
                 🔥 {state.player.streakDays}d
               </span>
             )}

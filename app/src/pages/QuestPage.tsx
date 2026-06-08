@@ -35,16 +35,16 @@ export default function QuestPage() {
           📖 Daily Quest
         </h2>
         <p style={{ color: '#AAA', fontSize: 13 }}>
-          Complete 2 game modes to finish today's quest!
+          Complete 2 different game modes to finish today's quest!
         </p>
         <div style={{ marginTop: 12 }}>
           <div className="progress-bar">
             <div
               className="progress-bar-fill"
               style={{
-                width: `${(completedModes.size / 2) * 100}%`,
+                width: `${Math.min((completedModes.size / 2) * 100, 100)}%`,
                 background: dailyQuestComplete
-                  ? 'linear-gradient(180deg, #FFC107 0%, #F5A623 100%)'
+                  ? 'linear-gradient(90deg, #F5A623, #FFC107)'
                   : undefined,
               }}
             />
@@ -54,13 +54,38 @@ export default function QuestPage() {
           </span>
         </div>
         {dailyQuestComplete && (
-          <div style={{ marginTop: 12 }}>
-            <span className="pixel-text-sm" style={{ color: '#FFC107', fontSize: 10 }}>
-              🎉 Quest Complete! +50 XP Bonus!
+          <div
+            style={{
+              marginTop: 12,
+              padding: '10px 16px',
+              background: 'rgba(255,193,7,0.12)',
+              borderRadius: 6,
+              border: '1px solid rgba(255,193,7,0.3)',
+            }}
+          >
+            <span className="pixel-text-sm" style={{ color: '#FFC107', fontSize: 11 }}>
+              🎉 Quest Complete! +50 XP Bonus Awarded!
             </span>
           </div>
         )}
       </div>
+
+      {/* Streak info */}
+      {state.player.streakDays > 0 && (
+        <div
+          className="mc-panel"
+          style={{
+            padding: '10px 16px',
+            textAlign: 'center',
+            background: 'rgba(255,165,0,0.08)',
+            border: '1px solid rgba(255,165,0,0.2)',
+          }}
+        >
+          <span className="pixel-text-sm" style={{ color: '#FFA500', fontSize: 9 }}>
+            🔥 {state.player.streakDays} Day Streak — +{Math.min(state.player.streakDays, 5) * 5} XP bonus per game!
+          </span>
+        </div>
+      )}
 
       {/* Word Count */}
       {allWords.length === 0 ? (
