@@ -134,7 +134,9 @@ export class RedstoneQuizEngine implements GameEngine {
       const sentence = this.pickRandomSentence(word);
       if (!sentence) continue;
 
-      const sentenceWithBlank = this.blankOutWord(sentence.english, word.word);
+      const blankResult = this.blankOutWord(sentence.english, word.word);
+      if (!blankResult) continue; // Skip if word form not found in sentence
+
       const distractors = this.pickDistractors(word, shuffled);
 
       // Shuffle options so correct answer isn't always in the same position
@@ -145,7 +147,8 @@ export class RedstoneQuizEngine implements GameEngine {
         correctAnswer: word.word,
         sentenceEnglish: sentence.english,
         sentenceChinese: sentence.chinese,
-        sentenceWithBlank,
+        sentenceWithBlank: blankResult.sentenceWithBlank,
+        inflectedForm: blankResult.inflectedForm,
         options: allOptions,
         phonetic: word.phonetic,
       });
@@ -160,11 +163,78 @@ export class RedstoneQuizEngine implements GameEngine {
     return sentences[Math.floor(Math.random() * sentences.length)];
   }
 
-  private blankOutWord(sentence: string, word: string): string {
-    // Replace the target word with ______ (case-insensitive, word boundaries)
-    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
-    return sentence.replace(regex, '______');
+  /**
+   * Replace the target word with ______ in the sentence.
+   * Handles inflected forms: plurals (tools→tool), gerunds (Learning→Learn),
+   * past tense (closed→close), third-person (exports→export), etc.
+   *
+   * Strategy: tokenize sentence into words, for each token check if it
+   * "belongs to" the target word by verifying the token starts with the
+   * target (case-insensitive) and any extra suffix is morphologically plausible.
+   * Falls back to exact regex match for mid-word punctuation cases.
+   */
+  private blankOutWord(
+    sentence: string,
+    word: string,
+  ): { sentenceWithBlank: string; inflectedForm: string } | null {
+    const wordLower = word.toLowerCase();
+
+    // Tokenize: split on whitespace while preserving spans
+    // Match each "word" as a sequence of non-whitespace characters
+    const tokens = sentence.match(/\S+/g) || [];
+    let matchedToken: string | null = null;
+
+    for (const token of tokens) {
+      // Strip leading/trailing punctuation for comparison
+      const cleaned = token.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '');
+      if (!cleaned) continue;
+
+      const cleanedLower = cleaned.toLowerCase();
+
+      // 1. Exact match (case-insensitive)
+      if (cleanedLower === wordLower) {
+        matchedToken = token;
+        break;
+      }
+
+      // 2. Token starts with the target word (handles inflected forms)
+      if (cleanedLower.startsWith(wordLower)) {
+        const suffix = cleanedLower.slice(wordLower.length);
+
+        // Common English suffixes for inflected forms
+        if (/^(s|es|ed|d|ing|er|r|'s|s'|ly|ness|ment|able|ible)$/.test(suffix)) {
+          matchedToken = token;
+          break;
+        }
+
+        // Also allow compound words where the target is the first part
+        // e.g., "scanner" from "scan" (scan + ner)
+        if (suffix.length <= 5 && /^[a-z]+$/.test(suffix)) {
+          matchedToken = token;
+          break;
+        }
+      }
+    }
+
+    // Fallback: try exact regex match (handles mid-word punctuation edge cases)
+    if (!matchedToken) {
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+      const match = regex.exec(sentence);
+      if (match) {
+        matchedToken = match[0];
+      }
+    }
+
+    if (!matchedToken) return null;
+
+    // Extract the inflected form (the actual word text, preserving case)
+    const inflectedForm = matchedToken.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '');
+
+    // Replace the matched token in the sentence (preserving surrounding text)
+    const sentenceWithBlank = sentence.replace(matchedToken, '______');
+
+    return { sentenceWithBlank, inflectedForm };
   }
 
   private pickDistractors(correctWord: GameWord, allWords: GameWord[]): string[] {
@@ -208,6 +278,7 @@ export interface QuestionData {
   sentenceEnglish: string;
   sentenceChinese: string;
   sentenceWithBlank: string;
+  inflectedForm: string; // The actual word form found in the sentence (e.g., "windows" → "Window")
   options: string[];
   phonetic: string;
 }

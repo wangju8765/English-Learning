@@ -57,15 +57,12 @@ export default function RedstoneQuiz({ words, onAnswer, onComplete }: RedstoneQu
     setFeedback(null);
     answerStartRef.current = Date.now();
 
-    // Speech: word → instruction → sentence → word
+    // Speech: instruction only — don't read the answer!
+    // The sentence is shown visually; reading the word/sentence would give away the answer.
     (async () => {
-      await speakWord(q.correctAnswer, 0.85);
-      await new Promise(r => setTimeout(r, 400));
       await speakSequence([
-        { text: '选择正确的单词填入句子', lang: 'zh', pauseMs: 400 },
-        { text: q.prompt, lang: 'en', pauseMs: 800 },
+        { text: '选择正确的单词填入句子', lang: 'zh', pauseMs: 600 },
       ]);
-      await speakWord(q.correctAnswer, 0.85);
     })().catch(() => {});
   }, [onComplete, soundEnabled]);
 
@@ -92,13 +89,18 @@ export default function RedstoneQuiz({ words, onAnswer, onComplete }: RedstoneQu
         onAnswer(questionData.wordId, true, responseTimeMs);
         setProgress(engineRef.current.getProgress());
 
+        // Read the full sentence as reinforcement (post-answer, not pre-answer)
         setTimeout(() => {
-          speakWord(result.correctAnswer).catch(() => {});
+          const data = engineRef.current?.getCurrentQuestionData();
+          if (data) {
+            // Read the original sentence with the inflected form
+            speakWord(data.sentenceEnglish, 0.9).catch(() => {});
+          }
         }, 200);
 
         setTimeout(() => {
           if (engineRef.current) loadQuestion(engineRef.current);
-        }, 1500);
+        }, 2000);
       } else {
         if (soundEnabled) playFail();
 
