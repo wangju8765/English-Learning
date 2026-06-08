@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "contentHash": "8b674823",
-  "generatedAt": "2026-06-04T05:06:53.403Z",
+  "contentHash": "53f54956",
+  "generatedAt": "2026-06-08T03:36:57.372Z",
   "entries": [
     {
       "id": "mac",
@@ -575,6 +575,44 @@
       ],
       "sourceDate": "2026-06-04",
       "parentNotes": "Ex（向外）+ Port（港口）→ 货物出港！和 Import 相反，把做好的程序或文件给别人用。"
+    },
+    {
+      "id": "close",
+      "word": "close",
+      "phonetic": "/kloʊz/",
+      "partOfSpeech": "v.",
+      "definition": "关闭；合上",
+      "exampleSentences": [
+        {
+          "english": "Please close the door.",
+          "chinese": "请把门关上。"
+        },
+        {
+          "english": "Close the app before you shut down the computer.",
+          "chinese": "关电脑之前先关闭应用程序。"
+        }
+      ],
+      "sourceDate": "2026-06-08",
+      "parentNotes": "作动词读 /kloʊz/（关闭），作形容词读 /kloʊs/（近的），拼写一样但发音和意思不同"
+    },
+    {
+      "id": "utility",
+      "word": "utility",
+      "phonetic": "/juːˈtɪləti/",
+      "partOfSpeech": "n.",
+      "definition": "工具；实用程序；公用事业",
+      "exampleSentences": [
+        {
+          "english": "This utility helps you organize your files.",
+          "chinese": "这个工具帮你整理文件。"
+        },
+        {
+          "english": "I wrote a small utility to convert images.",
+          "chinese": "我写了一个小工具来转换图片。"
+        }
+      ],
+      "sourceDate": "2026-06-08",
+      "parentNotes": "编程中常见，如 utility function（工具函数），指帮助完成通用任务的小程序"
     }
   ]
 }

@@ -1,6 +1,6 @@
 // ============================================================
-// Ender Pearl Challenge — timed typing game
-// See the Chinese definition, type the English word before the pearl lands
+// Ender Pearl Challenge — timed click-to-spell game
+// Click letter blocks to spell the word before the pearl lands
 // ============================================================
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameWord, GameProgress } from '../../types';
@@ -19,23 +19,23 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
   const { state } = useApp();
   const soundEnabled = state.settings.soundEnabled;
   const engineRef = useRef<EnderPearlEngine | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timeLimitRef = useRef<number>(8);
-  const answerStartRef = useRef<number>(Date.now());
+  const timeLimitRef = useRef<number>(12);
 
   const [question, setQuestion] = useState<{
     wordId: string;
     definition: string;
     phonetic?: string;
+    letters: string[];
     correctAnswer: string;
   } | null>(null);
-  const [userInput, setUserInput] = useState('');
-  const [timeLeft, setTimeLeft] = useState(8);
+  const [slots, setSlots] = useState<string[]>([]);
+  const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
+  const [timeLeft, setTimeLeft] = useState(12);
   const [feedback, setFeedback] = useState<{
     correct: boolean;
     showAnswer: string;
-    userAnswer: string;
+    userAnswer?: string;
     xp: number;
     combo: number;
   } | null>(null);
@@ -46,7 +46,7 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
   const [isComplete, setIsComplete] = useState(false);
   const [comboCount, setComboCount] = useState(0);
   const submittingRef = useRef(false);
-  const handleSubmitRef = useRef<(input: string, timedOut?: boolean) => void>(() => {});
+  const handleSubmitRef = useRef<(currentSlots: string[]) => void>(() => {});
   const timeLeftRef = useRef(timeLeft);
   timeLeftRef.current = timeLeft;
 
@@ -55,7 +55,6 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
     engine.initialize(words);
     engineRef.current = engine;
     loadQuestion(engine);
-    answerStartRef.current = Date.now();
   }, [words]);
 
   const clearTimer = useCallback(() => {
@@ -78,11 +77,10 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
 
       if (remaining <= 0) {
         clearTimer();
-        // Auto-submit whatever the user has typed
         if (!submittingRef.current) {
           submittingRef.current = true;
-          setUserInput((current) => {
-            handleSubmitRef.current(current, true); // true = timed out
+          setSlots((current) => {
+            handleSubmitRef.current(current);
             return current;
           });
         }
@@ -105,45 +103,88 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
       wordId: q.wordId,
       definition: q.prompt,
       phonetic: q.phonetic,
+      letters: q.options || [],
       correctAnswer: q.correctAnswer,
     });
-    setUserInput('');
+    setSlots([]);
+    setUsedIndices(new Set());
     setFeedback(null);
     setComboCount(engine.getComboCount());
     setProgress(engine.getProgress());
     submittingRef.current = false;
-    answerStartRef.current = Date.now();
-
-    // Focus input after render
-    setTimeout(() => inputRef.current?.focus(), 100);
 
     // Start timer
     const timeLimit = engine.getTimeLimit();
     startTimer(timeLimit);
 
-    // Read the English word first as auditory hint, then Chinese instruction & definition
+    // Read Chinese instruction & definition first, then the English word as final auditory cue
     (async () => {
-      await speakWord(q.correctAnswer, 0.85);
-      await new Promise(r => setTimeout(r, 400));
       await speakSequence([
-        { text: '请输入这个单词', lang: 'zh', pauseMs: 400 },
-        { text: q.prompt, lang: 'zh' },
+        { text: '请拼出这个单词', lang: 'zh', pauseMs: 400 },
+        { text: q.prompt, lang: 'zh', pauseMs: 600 },
       ]);
+      await speakWord(q.correctAnswer, 0.85);
     })().catch(() => {});
   }, [onComplete, soundEnabled, clearTimer, startTimer]);
 
+  const handleLetterClick = useCallback(
+    (letter: string, index: number) => {
+      if (!question || usedIndices.has(index) || feedback) return;
+
+      if (soundEnabled) playClick();
+
+      const newSlots = [...slots, letter];
+      const newUsed = new Set(usedIndices);
+      newUsed.add(index);
+
+      setSlots(newSlots);
+      setUsedIndices(newUsed);
+
+      // Auto-submit when slots are full
+      if (newSlots.length === question.correctAnswer.length) {
+        setTimeout(() => {
+          handleSubmitRef.current(newSlots);
+        }, 300);
+      }
+    },
+    [question, slots, usedIndices, feedback, soundEnabled]
+  );
+
+  const handleRemoveLetter = useCallback(
+    (slotIndex: number) => {
+      if (feedback) return;
+      if (soundEnabled) playClick();
+
+      const newSlots = slots.filter((_, i) => i !== slotIndex);
+
+      // Rebuild usedIndices from newSlots
+      const rebuiltUsed = new Set<number>();
+      const remaining = [...(question?.letters || [])];
+      for (const slotLetter of newSlots) {
+        for (let i = 0; i < remaining.length; i++) {
+          if (remaining[i] === slotLetter) {
+            rebuiltUsed.add(i);
+            remaining[i] = '';
+            break;
+          }
+        }
+      }
+
+      setSlots(newSlots);
+      setUsedIndices(rebuiltUsed);
+    },
+    [slots, question, feedback, soundEnabled]
+  );
+
   const handleSubmit = useCallback(
-    (input: string, timedOut: boolean = false) => {
+    (currentSlots: string[]) => {
       if (!engineRef.current || !question || feedback) return;
 
-      const answer = input.trim();
-      if (!answer && !timedOut) return; // Don't submit empty input unless timed out
+      const answer = currentSlots.join('');
+      const timeRatio = timeLeftRef.current / timeLimitRef.current;
+      const result = engineRef.current.submitAnswer(answer || '(no answer)', timeRatio);
 
       clearTimer();
-
-      const responseTimeMs = Date.now() - answerStartRef.current;
-      const timeRatio = timedOut ? 0 : timeLeftRef.current / timeLimitRef.current;
-      const result = engineRef.current.submitAnswer(answer || '(no answer)', timeRatio);
 
       if (result.correct) {
         if (soundEnabled) playBlockBreak();
@@ -151,16 +192,14 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
         setFeedback({
           correct: true,
           showAnswer: result.correctAnswer,
-          userAnswer: answer,
           xp: result.xpEarned,
           combo: engineRef.current.getComboCount(),
         });
 
-        onAnswer(question.wordId, true, responseTimeMs);
+        onAnswer(question.wordId, true, 0);
         setProgress(engineRef.current.getProgress());
         setComboCount(engineRef.current.getComboCount());
 
-        // Speak the word after a short delay
         setTimeout(() => {
           speakWord(result.correctAnswer).catch(() => {});
         }, 200);
@@ -171,6 +210,10 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
       } else {
         if (soundEnabled) playFail();
 
+        // Fill slots with the correct answer
+        const correctLetters = result.correctAnswer.toLowerCase().split('');
+        setSlots(correctLetters);
+
         setFeedback({
           correct: false,
           showAnswer: result.correctAnswer,
@@ -179,11 +222,10 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
           combo: 0,
         });
 
-        onAnswer(question.wordId, false, responseTimeMs);
+        onAnswer(question.wordId, false, 0);
         setProgress(engineRef.current.getProgress());
         setComboCount(0);
 
-        // Speak the correct word
         setTimeout(() => {
           speakWord(result.correctAnswer, 0.85).catch(() => {});
         }, 400);
@@ -198,17 +240,12 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
 
   handleSubmitRef.current = handleSubmit;
 
-  const handleInputKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter' && !feedback) {
-        e.preventDefault();
-        if (soundEnabled) playClick();
-        submittingRef.current = true;
-        handleSubmit(userInput);
-      }
-    },
-    [userInput, feedback, handleSubmit, soundEnabled]
-  );
+  const handleClear = useCallback(() => {
+    if (feedback) return;
+    if (soundEnabled) playClick();
+    setSlots([]);
+    setUsedIndices(new Set());
+  }, [feedback, soundEnabled]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -291,7 +328,7 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
         <div
           style={{
             height: '100%',
-            width: `${timeRatio * 100}%`,
+            width: `${Math.max(0, timeRatio) * 100}%`,
             background: timerColor,
             borderRadius: 4,
             transition: 'width 0.1s linear, background 0.3s ease',
@@ -305,15 +342,28 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
             transform: 'translateY(-50%)',
             fontSize: 20,
             lineHeight: 1,
-            filter: timeRatio < 0.3 ? 'grayscale(0)' : 'grayscale(0.3)',
+            filter: timeRatio < 0.3 ? 'none' : 'grayscale(0.3)',
             transition: 'filter 0.3s ease',
           }}
         >
           🎯
         </span>
+        {/* Time remaining digit */}
+        <span
+          style={{
+            position: 'absolute',
+            left: 6,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            fontSize: 7,
+            color: 'rgba(255,255,255,0.6)',
+          }}
+        >
+          {Math.ceil(timeLeft)}s
+        </span>
       </div>
 
-      {/* Definition panel — what to type */}
+      {/* Recipe panel — what to spell */}
       <div
         className="mc-panel"
         style={{
@@ -324,57 +374,23 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
         }}
       >
         <div className="pixel-text-sm" style={{ color: 'var(--text-muted)', fontSize: 7, marginBottom: 8 }}>
-          🎯 TYPE THIS WORD:
+          🎯 SPELL BEFORE THE PEARL LANDS:
         </div>
         <div
           style={{
-            fontSize: 18,
+            fontSize: 16,
             color: 'var(--color-gold)',
-            marginBottom: question.phonetic ? 6 : 12,
+            marginBottom: question.phonetic ? 6 : 0,
             animation: 'fadeInUp 0.3s ease-out',
           }}
         >
           {question.definition}
         </div>
         {question.phonetic && (
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
             /{question.phonetic}/
           </div>
         )}
-
-        {/* Letter count hint */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 4,
-            marginTop: 8,
-          }}
-        >
-          {Array.from({ length: totalSlots }).map((_, i) => {
-            const typed = userInput[i] || '';
-            const dimmed = isError;
-            return (
-              <span
-                key={i}
-                style={{
-                  fontSize: 18,
-                  fontFamily: 'var(--font-mono, monospace)',
-                  color: dimmed
-                    ? 'var(--color-redstone)'
-                    : typed
-                      ? 'var(--color-xp)'
-                      : 'rgba(255,255,255,0.2)',
-                  minWidth: 18,
-                  textAlign: 'center',
-                  transition: 'color 0.15s ease',
-                }}
-              >
-                {dimmed ? (question.correctAnswer[i] || '_') : (typed || '_')}
-              </span>
-            );
-          })}
-        </div>
       </div>
 
       {/* Feedback */}
@@ -414,58 +430,118 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
         )}
       </div>
 
-      {/* Text input — command block style */}
-      <div className="mc-panel" style={{ padding: 12 }}>
-        <input
-          ref={inputRef}
-          type="text"
-          value={isError ? feedback.showAnswer : userInput}
-          onChange={(e) => {
-            if (feedback) return;
-            setUserInput(e.target.value.toLowerCase().replace(/[^a-z]/g, ''));
-          }}
-          onKeyDown={handleInputKeyDown}
-          disabled={!!feedback}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          placeholder={isError ? '' : 'Type the word...'}
+      {/* Crafting slots */}
+      <div className="mc-panel" style={{ padding: 12, overflowX: 'auto' }}>
+        <div
           style={{
-            width: '100%',
-            padding: '12px 16px',
-            fontSize: 22,
-            fontFamily: 'var(--font-mono, "Courier New", monospace)',
-            letterSpacing: 4,
-            background: isError
-              ? 'rgba(255,70,70,0.1)'
-              : 'rgba(0,0,0,0.3)',
-            border: isError
-              ? '2px solid var(--color-redstone)'
-              : '2px solid rgba(138, 43, 226, 0.4)',
-            borderRadius: 4,
-            color: isError ? 'var(--color-redstone)' : '#FFF',
-            textAlign: 'center',
-            outline: 'none',
-            caretColor: 'var(--color-gold)',
-            transition: 'border-color 0.2s ease, background 0.2s ease',
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 4,
+            flexWrap: 'nowrap',
+            maxWidth: '100%',
           }}
-        />
+        >
+          {Array.from({ length: totalSlots }).map((_, i) => {
+            const letter = slots[i] || '';
+            const filled = i < slots.length;
+
+            return (
+              <button
+                key={i}
+                onClick={() => filled && !isError && handleRemoveLetter(i)}
+                disabled={!filled || (!!feedback && !isError)}
+                style={{
+                  flex: '1 1 0',
+                  minWidth: 26,
+                  maxWidth: 44,
+                  height: 42,
+                  fontSize: 16,
+                  cursor: filled && !feedback ? 'pointer' : 'default',
+                  background: isError
+                    ? 'rgba(255,70,70,0.15)'
+                    : filled
+                      ? 'var(--color-surface)'
+                      : 'rgba(255,255,255,0.04)',
+                  border: isError
+                    ? '2px solid var(--color-redstone)'
+                    : filled
+                      ? '2px solid var(--color-diamond)'
+                      : '2px dashed rgba(255,255,255,0.15)',
+                  borderRadius: 4,
+                  color: isError
+                    ? 'var(--color-redstone)'
+                    : filled
+                      ? '#FFF'
+                      : 'transparent',
+                  animation: isError ? 'blockShake 0.4s ease-out' : undefined,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {letter}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Combo + action hint */}
-      <div className="flex-center" style={{ gap: 16 }}>
+      {/* Letter pool — responsive grid */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(auto-fit, minmax(48px, 1fr))`,
+          gap: 8,
+          maxWidth: 360,
+          margin: '0 auto',
+          padding: '4px 0',
+        }}
+      >
+        {question.letters.map((letter, i) => {
+          const isUsed = usedIndices.has(i);
+          return (
+            <button
+              key={i}
+              className="stone-block"
+              onClick={() => handleLetterClick(letter, i)}
+              disabled={isUsed || !!feedback}
+              style={{
+                aspectRatio: '1',
+                fontSize: 22,
+                fontWeight: 700,
+                minWidth: 0,
+                minHeight: 0,
+                padding: 4,
+                opacity: isUsed ? 0.15 : 1,
+                cursor: isUsed || feedback ? 'default' : 'pointer',
+                transition: 'all 0.12s ease',
+              }}
+            >
+              {letter.toUpperCase()}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Action buttons + combo */}
+      <div className="flex" style={{ gap: 12, justifyContent: 'center' }}>
+        <button
+          className="btn btn-ghost"
+          onClick={handleClear}
+          disabled={slots.length === 0 || !!feedback}
+          style={{ fontSize: 10, padding: '8px 20px' }}
+        >
+          🔄 Clear
+        </button>
         {comboCount >= 2 && !feedback && (
           <span
             className="pixel-text-sm combo-pop"
-            style={{ color: 'var(--color-diamond)', fontSize: 9 }}
+            style={{ color: 'var(--color-diamond)', fontSize: 9, alignSelf: 'center' }}
           >
             🔥 {comboCount}x
           </span>
         )}
-        {!feedback && (
-          <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>
-            Press Enter to submit
+        {slots.length < totalSlots && !feedback && (
+          <span style={{ color: 'var(--text-muted)', fontSize: 10, alignSelf: 'center' }}>
+            Fill all {totalSlots} slots
           </span>
         )}
       </div>

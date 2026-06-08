@@ -1,8 +1,12 @@
 // ============================================================
-// Ender Pearl Challenge Engine — timed typing game
+// Ender Pearl Challenge Engine — timed click-to-spell game
 // ============================================================
 import type { GameEngine, GameWord, Question, AnswerResult, GameProgress, MasteryLevel } from '../../types';
 import { XP_CONFIG } from '../../types';
+
+// Common English letters used as distractors
+const DISTRACTOR_POOL = 'eariotnslcudpmhgbfywkvxzjq'.split('');
+const EXTRA_LETTER_COUNT = 2; // A few extra letters to make it slightly harder than Crafting Table
 
 export class EnderPearlEngine implements GameEngine {
   private words: GameWord[] = [];
@@ -27,11 +31,29 @@ export class EnderPearlEngine implements GameEngine {
     if (this.currentIndex >= this.words.length) return null;
 
     const word = this.words[this.currentIndex];
+    const letters = word.word.toLowerCase().split('');
+
+    // Generate extra distractor letters not in the target word
+    const usedLetters = new Set(letters);
+    const distractors: string[] = [];
+    const shuffledPool = [...DISTRACTOR_POOL].sort(() => Math.random() - 0.5);
+    for (const ch of shuffledPool) {
+      if (distractors.length >= EXTRA_LETTER_COUNT) break;
+      if (!usedLetters.has(ch)) {
+        distractors.push(ch);
+        usedLetters.add(ch);
+      }
+    }
+
+    // Combine and sort alphabetically for easy scanning
+    const allLetters = [...letters, ...distractors].sort();
+
     return {
       wordId: word.id,
       type: 'typing',
       prompt: word.definition,
       correctAnswer: word.word.toLowerCase(),
+      options: allLetters,
       phonetic: word.phonetic,
     };
   }
@@ -94,11 +116,11 @@ export class EnderPearlEngine implements GameEngine {
     }
   }
 
-  /** Get time limit in seconds for the current word, based on word length */
+  /** Get time limit in seconds — generous for click-to-spell */
   getTimeLimit(): number {
     const word = this.words[this.currentIndex];
-    if (!word) return 8;
-    return Math.max(6, Math.ceil(word.word.length * 1.5));
+    if (!word) return 12;
+    return Math.max(10, Math.ceil(word.word.length * 3));
   }
 
   getComboCount(): number {
