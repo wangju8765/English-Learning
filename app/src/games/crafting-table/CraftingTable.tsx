@@ -30,6 +30,7 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
   const [feedback, setFeedback] = useState<{
     correct: boolean;
     showAnswer: string;
+    userAnswer?: string;
   } | null>(null);
   const [progress, setProgress] = useState<GameProgress>({
     currentQuestion: 0, totalQuestions: 0, correctCount: 0,
@@ -68,11 +69,15 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
     setFeedback(null);
     answerStartRef.current = Date.now();
 
-    // Read the definition
-    speakSequence([
-      { text: '请拼出这个单词', lang: 'zh', pauseMs: 600 },
-      { text: q.prompt, lang: 'zh' },
-    ]).catch(() => {});
+    // Read the English word first as auditory hint, then Chinese instruction & definition
+    (async () => {
+      await speakWord(q.correctAnswer, 0.85);
+      await new Promise(r => setTimeout(r, 500));
+      await speakSequence([
+        { text: '请拼出这个单词', lang: 'zh', pauseMs: 400 },
+        { text: q.prompt, lang: 'zh' },
+      ]);
+    })().catch(() => {});
   }, [onComplete, soundEnabled]);
 
   const handleSubmitRef = useRef<(currentSlots: string[]) => void>(() => {});
@@ -137,12 +142,16 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
 
       if (result.correct) {
         if (soundEnabled) playBlockBreak();
-        speakWord(result.correctAnswer).catch(() => {});
 
         setFeedback({ correct: true, showAnswer: result.correctAnswer });
 
         onAnswer(question.wordId, true, responseTimeMs);
         setProgress(engineRef.current.getProgress());
+
+        // Speak the word after a short delay to separate from sound effect
+        setTimeout(() => {
+          speakWord(result.correctAnswer).catch(() => {});
+        }, 200);
 
         setTimeout(() => {
           if (engineRef.current) loadQuestion(engineRef.current);
@@ -150,15 +159,28 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
       } else {
         if (soundEnabled) playFail();
 
-        setFeedback({ correct: false, showAnswer: result.correctAnswer });
+        // Fill slots with the correct answer so user can see it clearly
+        const correctLetters = result.correctAnswer.toLowerCase().split('');
+        setSlots(correctLetters);
+
+        setFeedback({
+          correct: false,
+          showAnswer: result.correctAnswer,
+          userAnswer: answer,
+        });
 
         onAnswer(question.wordId, false, responseTimeMs);
         setProgress(engineRef.current.getProgress());
 
-        // Show correct answer, then move on
+        // Speak the correct word so user hears it
+        setTimeout(() => {
+          speakWord(result.correctAnswer, 0.85).catch(() => {});
+        }, 400);
+
+        // Longer display time so user can process the correct answer
         setTimeout(() => {
           if (engineRef.current) loadQuestion(engineRef.current);
-        }, 2000);
+        }, 3500);
       }
     },
     [question, feedback, onAnswer, loadQuestion, soundEnabled]
@@ -247,20 +269,32 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
       </div>
 
       {/* Feedback */}
-      <div style={{ minHeight: 24, textAlign: 'center' }}>
-        {feedback && (
+      <div style={{ minHeight: 28, textAlign: 'center' }}>
+        {feedback && feedback.correct && (
           <div
             style={{
               animation: 'fadeInUp 0.2s ease-out',
-              color: feedback.correct ? 'var(--color-xp)' : 'var(--color-redstone)',
+              color: 'var(--color-xp)',
               fontSize: 13,
             }}
           >
-            {feedback.correct ? (
-              <span>✅ Correct! {feedback.showAnswer}</span>
-            ) : (
-              <span>❌ The word is: <strong>{feedback.showAnswer}</strong></span>
-            )}
+            ✅ 正确！{feedback.showAnswer}
+          </div>
+        )}
+        {feedback && !feedback.correct && (
+          <div
+            style={{
+              animation: 'fadeInUp 0.3s ease-out',
+              color: 'var(--color-redstone)',
+              fontSize: 14,
+              fontWeight: 700,
+              padding: '8px 16px',
+              background: 'rgba(255,70,70,0.1)',
+              borderRadius: 6,
+              border: '1px solid rgba(255,70,70,0.3)',
+            }}
+          >
+            ❌ 正确拼写：<span style={{ fontSize: 20, letterSpacing: 2 }}>{feedback.showAnswer}</span>
           </div>
         )}
       </div>
@@ -279,13 +313,14 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
           {Array.from({ length: totalSlots }).map((_, i) => {
             const letter = slots[i] || '';
             const filled = i < slots.length;
+            const isError = feedback && !feedback.correct;
 
             return (
               <button
                 key={i}
                 className={filled ? 'stone-block' : 'crafting-slot'}
-                onClick={() => filled && handleRemoveLetter(i)}
-                disabled={!filled || !!feedback}
+                onClick={() => filled && !isError && handleRemoveLetter(i)}
+                disabled={!filled || (!!feedback && !isError)}
                 style={{
                   flex: '1 1 0',
                   minWidth: 26,
@@ -293,14 +328,23 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
                   height: 42,
                   fontSize: 16,
                   cursor: filled && !feedback ? 'pointer' : 'default',
-                  background: filled
-                    ? 'var(--color-surface)'
-                    : 'rgba(255,255,255,0.04)',
-                  border: filled
-                    ? '2px solid var(--color-diamond)'
-                    : '2px dashed rgba(255,255,255,0.15)',
+                  background: isError
+                    ? 'rgba(255,70,70,0.15)'
+                    : filled
+                      ? 'var(--color-surface)'
+                      : 'rgba(255,255,255,0.04)',
+                  border: isError
+                    ? '2px solid var(--color-redstone)'
+                    : filled
+                      ? '2px solid var(--color-diamond)'
+                      : '2px dashed rgba(255,255,255,0.15)',
                   borderRadius: 4,
-                  color: filled ? '#FFF' : 'transparent',
+                  color: isError
+                    ? 'var(--color-redstone)'
+                    : filled
+                      ? '#FFF'
+                      : 'transparent',
+                  animation: isError ? 'blockShake 0.4s ease-out' : undefined,
                   transition: 'all 0.15s ease',
                 }}
               >
