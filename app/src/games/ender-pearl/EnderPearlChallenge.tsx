@@ -117,8 +117,10 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
     const timeLimit = engine.getTimeLimit();
     startTimer(timeLimit);
 
-    // Read Chinese instruction & definition first, then the English word as final auditory cue
+    // Read: word → instruction → definition → word (twice before acting)
     (async () => {
+      await speakWord(q.correctAnswer, 0.85);
+      await new Promise(r => setTimeout(r, 400));
       await speakSequence([
         { text: '请拼出这个单词', lang: 'zh', pauseMs: 400 },
         { text: q.prompt, lang: 'zh', pauseMs: 600 },
