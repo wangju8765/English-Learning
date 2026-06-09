@@ -70,10 +70,13 @@ app/
   src/
     App.tsx           ← 根组件 + 路由
     components/       ← 共享 UI 组件（Layout, AudioButton, WordDisplay）
-    games/            ← 3 种已实现的游戏模式
+    games/            ← 6 种已实现的游戏模式
       diamond-mine/    ← ⛏️ 钻石矿工（3×3 词义识别）
       crafting-table/  ← 🛠️ 工作台（点击拼词）
+      echo-chamber/    ← 🎤 回音密室（逐字母拼读入门）
       ender-pearl/     ← 🎯 末影珍珠（计时点击拼词）
+      redstone-quiz/   ← 🔴 红石问答（句子语境填空）
+      note-block/      ← 🎵 音符盒工作室（三阶段听→写训练）
     pages/            ← 页面级组件（Home, Quest, Game, Progress, WordBook, Inventory, Settings）
     services/         ← IndexedDB、语音、音效、间隔重复
     store/            ← React Context + useReducer（AppContext, reducer）
@@ -83,12 +86,24 @@ app/
   scripts/
     parse-vocabulary.ts  ← md → JSON 解析器
   public/data/
-    vocabulary.json   ← 解析生成的词汇数据（自动生成，33 个词条）
+    vocabulary.json   ← 解析生成的词汇数据（自动生成，38 个词条）
 .github/workflows/
   deploy.yml          ← CI/CD 自动部署
 ```
 
-## 游戏模式（3/5 已实现）
+## 学习路径
+
+```
+新词 → 🎤 Echo Chamber（逐字母拼读，建立音→字母映射）
+  ↓
+巩固 → 🎵 Note Block Studio（音节拆分→照抄→独立听写）
+  ↓
+练习 → 🛠️ Crafting Table / 🎯 Ender Pearl Challenge
+  ↓
+应用 → 🔴 Redstone Quiz（句子语境） / ⛏️ Diamond Mine（词义识别）
+```
+
+## 游戏模式（6/7 已实现）
 
 ### ⛏️ Diamond Mine（钻石矿工）
 - 词义识别 — 3×3 矿墙，9 块砖中寻找对应中文释义的英文词（每面 2 个目标，最多 5 面墙）
@@ -96,22 +111,38 @@ app/
 - 难度 ⭐
 
 ### 🛠️ Crafting Table（工作台）
-- 拼写训练 — 0 干扰字母，字母表序排列，4 列响应式网格大方块点击拼词
+- 拼写训练 — 见中文释义，0 干扰字母，字母表序排列，4 列响应式网格大方块点击拼词
 - 错误时字母槽填入正确答案 + 红色面板 + 朗读，停留 3.5s
 - 难度 ⭐⭐
+
+### 🎤 Echo Chamber（回音密室）
+- 听→写入门 — 听单词 → 逐字母拼读(C-A-L-C-U-L-A-T-E) → 再听 → 拼写
+- 拼错不跳过，必须拼对才能离开。🐢 慢速模式，重试 ≥3 次显示答案
+- 难度 ⭐
 
 ### 🎯 Ender Pearl Challenge（末影珍珠挑战）
 - 计时拼词 — 2 干扰字母，倒计时（10s 起，词长×3）内点击字母拼出单词
 - 速度 XP 加成 + combo 连击，末影主题紫色 UI + 🎯 计时条绿→黄→红渐变
 - 难度 ⭐⭐⭐
 
+### 🔴 Redstone Quiz（红石问答）
+- 句子语境填空 — 英文句子挖空（滴声遮盖），4 选 1，2×2 选项网格
+- 中文翻译辅助理解，智能识别词形变化（复数/时态/动名词）
+- 难度 ⭐⭐
+
+### 🎵 Note Block Studio（音符盒工作室）
+- 三阶段听→写训练：音节拆分(🟢) → 照抄(🟡) → 独立(🟠)
+- Stage 1 按音节数重复 N 轮，元音高亮 + 点音节听发音
+- 同一词走完三步才进入下一个，词量限制 6 个
+- 难度 ⭐⭐
+
 ### 规划中
-- 🔴 Redstone Quiz（红石问答）— 句子语境填空
 - 🌑 Nether Portal Escape（下界传送门逃脱）— 综合 BOSS 关
 
 ## 语音交互模式
 
-出题时统一三段式朗读：`单词 → 指令 → 释义 → 单词`（操作前听 2 遍英文）
+三段式朗读（Crafting Table / Note Block）：`单词 → 指令 → 释义 → 单词`
+逐字母拼读（Echo Chamber）：`单词 → C-A-L-C-U-L-A-T-E → 单词`
 正确后读第 3 遍强化，错误时 0.85×慢速朗读 + 视觉停留 3.5s。
 
 ## 激励系统
