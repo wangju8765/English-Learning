@@ -1,8 +1,8 @@
 // ============================================================
 // Note Block Studio — 3-stage scaffolding for listen→spell
-// Stage 1 🟢 Copy:   template shown, guided clicking
-// Stage 2 🟡 Assisted: syllable groups + vowel highlights
-// Stage 3 🟠 Independent: pure audio, no visual help
+// Stage 1 🟢 Syllables: syllable groups + vowel highlights, repeat N rounds (= syllable count)
+// Stage 2 🟡 Copy:      full template shown, guided clicking — solidify overall shape
+// Stage 3 🟠 Independent: pure audio, no visual help — real test
 // ============================================================
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameWord, GameProgress } from '../../types';
@@ -18,9 +18,11 @@ interface NoteBlockStudioProps {
   onComplete: (progress: GameProgress) => void;
 }
 
+// Note: Stage labels are tied to content, not number.
+// Stage 1 = SYLLABLES (was "assisted"), Stage 2 = COPY, Stage 3 unchanged
 const STAGE_LABELS: Record<NoteBlockStage, string> = {
-  1: 'COPY',
-  2: 'ASSISTED',
+  1: 'SYLLABLES',
+  2: 'COPY',
   3: 'INDEPENDENT',
 };
 
@@ -31,8 +33,8 @@ const STAGE_EMOJI: Record<NoteBlockStage, string> = {
 };
 
 const STAGE_INSTRUCTIONS: Record<NoteBlockStage, string> = {
-  1: '对照下面的拼写点击字母',
-  2: '注意每个音节的发音',
+  1: '注意每个音节的发音',
+  2: '对照下面的拼写点击字母',
   3: '根据读音拼出来',
 };
 
@@ -106,18 +108,15 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
       await new Promise(r => setTimeout(r, 400));
       if (speechId !== speechIdRef.current) return;
 
-      if (stage === 1) {
-        // Stage 1: word → instruction → definition → word
+      if (stage === 2) {
+        // Stage 2 (Copy): word → instruction → definition → word
         await speak(STAGE_INSTRUCTIONS[stage], 1.0, 'zh');
         if (speechId !== speechIdRef.current) return;
         await new Promise(r => setTimeout(r, 300));
         if (speechId !== speechIdRef.current) return;
         await speak(q.prompt, 1.0, 'zh');
-      } else if (stage === 2) {
-        // Stage 2: word → instruction → word
-        await speak(STAGE_INSTRUCTIONS[stage], 1.0, 'zh');
       } else {
-        // Stage 3: word → instruction → word
+        // Stage 1/3: word → instruction → word
         await speak(STAGE_INSTRUCTIONS[stage], 1.0, 'zh');
       }
       if (speechId !== speechIdRef.current) return;
@@ -127,7 +126,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
     })().catch(() => {});
   }, [onComplete, soundEnabled]);
 
-  // --- Stage 2: per-syllable audio ---
+  // --- Stage 1: per-syllable audio ---
   const handleSyllableClick = useCallback((syllableLetters: string[]) => {
     if (feedback) return;
     stopSpeech();
@@ -143,7 +142,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
     speakWord(stageQuestion.correctAnswer, 0.9).catch(() => {});
   }, [stageQuestion, feedback]);
 
-  // --- Hint (Stage 2/3): reveal first letter ---
+  // --- Hint (Stage 1/3): reveal first letter ---
   const handleHint = useCallback(() => {
     if (!stageQuestion || feedback || hintUsed) return;
     if (soundEnabled) playClick();
@@ -172,8 +171,8 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
 
       const stage = stageQuestion.stage;
 
-      if (stage === 1) {
-        // Stage 1 (Copy): only accept letters that match remaining unfilled template positions
+      if (stage === 2) {
+        // Stage 2 (Copy): only accept letters that match remaining unfilled template positions
         const template = stageQuestion.correctAnswer.split('');
         const slotArray = [...slots];
         // Pad slots to template length
@@ -425,67 +424,18 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
           🎵 NOTE BLOCK STUDIO
         </div>
 
-        {/* Stage 1: Template word + definition */}
-        {stage === 1 && (
+        {/* Stage 1: Syllable groups + vowel highlights */}
+        {stage === 1 && stageQuestion.syllables && (
           <>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 10 }}>
-              {STAGE_INSTRUCTIONS[1]}
-            </div>
-
-            {/* Template word — gray reference letters */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: 4,
-                marginBottom: 8,
-                flexWrap: 'wrap',
-              }}
-            >
-              {stageQuestion.correctAnswer.split('').map((letter, i) => {
-                const filled = slots.length > i && slots[i] === letter;
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      width: 30,
-                      height: 32,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 16,
-                      fontWeight: 700,
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                      color: filled ? 'var(--color-xp)' : 'rgba(255,255,255,0.3)',
-                      border: `1px solid ${filled ? 'var(--color-xp)' : 'rgba(255,255,255,0.1)'}`,
-                      borderRadius: 3,
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    {letter}
-                  </div>
-                );
-              })}
-            </div>
-
-            {stageQuestion.definition && (
-              <div style={{ fontSize: 14, color: 'var(--color-gold)', marginBottom: 4 }}>
-                {stageQuestion.definition}
+            {/* Round counter */}
+            {stageQuestion.totalSyllableRounds && stageQuestion.totalSyllableRounds > 1 && (
+              <div style={{ fontSize: 9, color: colors.accent, marginBottom: 8 }}>
+                Round {stageQuestion.syllableRound! + 1}/{stageQuestion.totalSyllableRounds}
               </div>
             )}
-            {stageQuestion.phonetic && (
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                /{stageQuestion.phonetic}/
-              </div>
-            )}
-          </>
-        )}
 
-        {/* Stage 2: Syllable groups + vowel highlights */}
-        {stage === 2 && stageQuestion.syllables && (
-          <>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 12 }}>
-              {STAGE_INSTRUCTIONS[2]}
+              {STAGE_INSTRUCTIONS[1]}
             </div>
 
             <div
@@ -509,8 +459,8 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
                     gap: 2,
                     padding: '8px 10px',
                     cursor: feedback ? 'default' : 'pointer',
-                    background: 'rgba(255,193,7,0.06)',
-                    borderColor: 'rgba(255,193,7,0.2) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(255,193,7,0.1)',
+                    background: 'rgba(128,255,32,0.06)',
+                    borderColor: 'rgba(128,255,32,0.2) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(128,255,32,0.1)',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -540,6 +490,62 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
             <div style={{ fontSize: 9, color: 'var(--text-muted)', opacity: 0.6 }}>
               🔈 Tap a syllable to hear it
             </div>
+          </>
+        )}
+
+        {/* Stage 2: Template word + definition (Copy) */}
+        {stage === 2 && (
+          <>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 10 }}>
+              {STAGE_INSTRUCTIONS[2]}
+            </div>
+
+            {/* Template word — gray reference letters */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 4,
+                marginBottom: 8,
+                flexWrap: 'wrap',
+              }}
+            >
+              {stageQuestion.correctAnswer.split('').map((letter, i) => {
+                const filled = slots.length > i && slots[i] === letter;
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      width: 30,
+                      height: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      color: filled ? 'var(--color-gold)' : 'rgba(255,255,255,0.3)',
+                      border: `1px solid ${filled ? 'var(--color-gold)' : 'rgba(255,255,255,0.1)'}`,
+                      borderRadius: 3,
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {letter}
+                  </div>
+                );
+              })}
+            </div>
+
+            {stageQuestion.definition && (
+              <div style={{ fontSize: 14, color: 'var(--color-gold)', marginBottom: 4 }}>
+                {stageQuestion.definition}
+              </div>
+            )}
+            {stageQuestion.phonetic && (
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                /{stageQuestion.phonetic}/
+              </div>
+            )}
           </>
         )}
 
@@ -686,7 +692,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
           🔊 Listen
         </button>
 
-        {(stage === 2 || stage === 3) && !hintUsed && (
+        {(stage === 1 || stage === 3) && !hintUsed && (
           <button
             className="btn btn-ghost"
             onClick={handleHint}

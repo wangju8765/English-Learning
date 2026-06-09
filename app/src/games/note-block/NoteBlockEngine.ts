@@ -1,8 +1,8 @@
 // ============================================================
 // Note Block Studio Engine — 3-stage scaffolding
-// Stage 1 (Copy):     full template shown, child copies → builds sound-letter link
-// Stage 2 (Assisted): syllable groups + vowel highlights → learns syllable→letter mapping
-// Stage 3 (Independent): pure audio, no visual help → tests real listening→spelling
+// Stage 1 (Syllables):   syllable groups + vowel highlights, repeats N rounds
+// Stage 2 (Copy):        full template shown, child copies → solidifies overall shape
+// Stage 3 (Independent): pure audio, no visual help → real test
 // ============================================================
 import type { GameEngine, GameWord, Question, AnswerResult, GameProgress, MasteryLevel } from '../../types';
 import { XP_CONFIG } from '../../types';
@@ -15,19 +15,23 @@ export interface StageQuestion {
   correctAnswer: string;
   letters: string[];
   stage: NoteBlockStage;
-  // Stage 1
+  // Stage 1 (Syllables)
+  syllables?: SyllableGroup[];
+  vowelIndices?: Set<number>;
+  syllableRound?: number;
+  totalSyllableRounds?: number;
+  // Stage 2 (Copy)
   templateWord?: string;
   definition?: string;
   phonetic?: string;
-  // Stage 2
-  syllables?: SyllableGroup[];
-  vowelIndices?: Set<number>;
 }
 
 export class NoteBlockEngine implements GameEngine {
   private words: GameWord[] = [];
   private wordIndex = 0;
   private stage: NoteBlockStage = 1;
+  private syllableRound = 0;        // Current round within Stage 1 (0-indexed)
+  private totalSyllableRounds = 1;  // = syllable count for current word
   private totalCorrect = 0;
   private totalIncorrect = 0;
   private xpEarned = 0;
@@ -38,11 +42,18 @@ export class NoteBlockEngine implements GameEngine {
     this.words = [...words].sort(() => Math.random() - 0.5);
     this.wordIndex = 0;
     this.stage = 1;
+    this.syllableRound = 0;
     this.totalCorrect = 0;
     this.totalIncorrect = 0;
     this.xpEarned = 0;
     this.comboCount = 0;
     this.maxCombo = 0;
+
+    // Pre-compute syllable rounds for the first word
+    if (this.words.length > 0) {
+      const syllables = splitSyllables(this.words[0].word);
+      this.totalSyllableRounds = Math.max(1, syllables.length);
+    }
   }
 
   getCurrentStage(): NoteBlockStage {
@@ -53,9 +64,16 @@ export class NoteBlockEngine implements GameEngine {
     return this.wordIndex;
   }
 
-  /** Number of words in this session */
   getTotalWords(): number {
     return this.words.length;
+  }
+
+  getSyllableRound(): number {
+    return this.syllableRound;
+  }
+
+  getTotalSyllableRounds(): number {
+    return this.totalSyllableRounds;
   }
 
   nextQuestion(): Question | null {
@@ -64,31 +82,21 @@ export class NoteBlockEngine implements GameEngine {
     const word = this.words[this.wordIndex];
     const letters = word.word.toLowerCase().split('');
     const allLetters = [...letters].sort();
-    const stage = this.stage;
 
-    const promptMap: Record<NoteBlockStage, string> = {
-      1: word.definition,   // Stage 1: show definition as prompt
-      2: '',                // Stage 2: syllables shown in UI, not via prompt
-      3: '',                // Stage 3: nothing
-    };
-
-    const phoneticMap: Record<NoteBlockStage, string | undefined> = {
-      1: word.phonetic,
-      2: undefined,
-      3: undefined,
-    };
+    // Stage 2 (Copy) shows definition; Stage 1/3 do not
+    const prompt = this.stage === 2 ? word.definition : '';
+    const phonetic = this.stage === 2 ? word.phonetic : undefined;
 
     return {
       wordId: word.id,
       type: 'spelling',
-      prompt: promptMap[stage],
+      prompt,
       correctAnswer: word.word.toLowerCase(),
       options: allLetters,
-      phonetic: phoneticMap[stage],
+      phonetic,
     };
   }
 
-  /** Get enriched question data including stage-specific fields */
   getStageQuestion(): StageQuestion | null {
     if (this.wordIndex >= this.words.length) return null;
 
@@ -104,13 +112,18 @@ export class NoteBlockEngine implements GameEngine {
     };
 
     if (this.stage === 1) {
+      // Syllables: show grouped syllables with vowel highlights
+      base.syllables = splitSyllables(word.word);
+      base.vowelIndices = getVowelIndices(word.word);
+      base.syllableRound = this.syllableRound;
+      base.totalSyllableRounds = this.totalSyllableRounds;
+    } else if (this.stage === 2) {
+      // Copy: show full template word + definition
       base.templateWord = word.word;
       base.definition = word.definition;
       base.phonetic = word.phonetic;
-    } else if (this.stage === 2) {
-      base.syllables = splitSyllables(word.word);
-      base.vowelIndices = getVowelIndices(word.word);
     }
+    // Stage 3: nothing extra
 
     return base;
   }
@@ -130,15 +143,16 @@ export class NoteBlockEngine implements GameEngine {
       if (this.comboCount > this.maxCombo) this.maxCombo = this.comboCount;
 
       const comboBonus = Math.min(this.comboCount - 1, 5) * 2;
-      // Stage 1 gives reduced XP (it's guided copying)
-      const baseXp = this.stage === 1 ? 3 : XP_CONFIG.BASE_CORRECT;
+      // Stage 2 (Copy) gives reduced XP since it's guided
+      // Stage 1 (Syllables) gives full XP for repeated practice
+      const baseXp = this.stage === 2 ? 3 : XP_CONFIG.BASE_CORRECT;
       const xp = baseXp + comboBonus;
       this.xpEarned += xp;
 
-      const masteryDelta = this.stage === 1 ? 0.5 : 1; // Stage 1 gives half mastery progress
+      const masteryDelta = this.stage === 2 ? 0.5 : 1;
       const newMastery = Math.min(oldMastery + masteryDelta, 5) as MasteryLevel;
 
-      this.advanceStage();
+      this.advance();
 
       return {
         correct: true,
@@ -151,7 +165,7 @@ export class NoteBlockEngine implements GameEngine {
       this.totalIncorrect++;
       this.comboCount = 0;
 
-      this.advanceStage(); // Still advance — don't get stuck
+      this.advance();
 
       return {
         correct: false,
@@ -164,17 +178,31 @@ export class NoteBlockEngine implements GameEngine {
   }
 
   /**
-   * Advance stage or word index:
-   * Stage 1 → Stage 2 (same word)
-   * Stage 2 → Stage 3 (same word)
-   * Stage 3 → Stage 1 (next word)
+   * Advance within the 3-stage cycle:
+   * Stage 1 (Syllables): syllableRound++ → if all rounds done → stage=2
+   * Stage 2 (Copy):      → stage=3
+   * Stage 3 (Independent): → next word, stage=1, reset syllable counter
    */
-  private advanceStage(): void {
-    if (this.stage < 3) {
-      this.stage = (this.stage + 1) as NoteBlockStage;
+  private advance(): void {
+    if (this.stage === 1) {
+      this.syllableRound++;
+      if (this.syllableRound >= this.totalSyllableRounds) {
+        this.stage = 2;
+        this.syllableRound = 0;
+      }
+    } else if (this.stage === 2) {
+      this.stage = 3;
     } else {
+      // Stage 3 → next word
       this.stage = 1;
+      this.syllableRound = 0;
       this.wordIndex++;
+
+      // Pre-compute syllable rounds for next word
+      if (this.wordIndex < this.words.length) {
+        const syllables = splitSyllables(this.words[this.wordIndex].word);
+        this.totalSyllableRounds = Math.max(1, syllables.length);
+      }
     }
   }
 
@@ -187,7 +215,6 @@ export class NoteBlockEngine implements GameEngine {
   }
 
   getProgress(): GameProgress {
-    // Total questions = words × 3 stages, but simplified as words count
     return {
       currentQuestion: this.wordIndex,
       totalQuestions: this.words.length,
@@ -199,7 +226,7 @@ export class NoteBlockEngine implements GameEngine {
   }
 
   isComplete(): boolean {
-    return this.wordIndex >= this.words.length && this.stage === 1;
+    return this.wordIndex >= this.words.length;
   }
 
   getCurrentWord(): GameWord | null {

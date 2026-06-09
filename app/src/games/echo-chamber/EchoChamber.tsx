@@ -587,7 +587,7 @@ async function spellOut(
   const letters = word.split('');
   for (const letter of letters) {
     if (speechId !== speechIdRef.current) return;
-    await speak(letter.toUpperCase(), 0.7, 'en');
+    await speak(letter, 0.7, 'en');
     if (speechId !== speechIdRef.current) return;
     await new Promise(r => setTimeout(r, intervalMs));
   }
