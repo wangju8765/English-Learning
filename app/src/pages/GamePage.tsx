@@ -9,6 +9,7 @@ import DiamondMine from '../games/diamond-mine/DiamondMine';
 import CraftingTable from '../games/crafting-table/CraftingTable';
 import EnderPearlChallenge from '../games/ender-pearl/EnderPearlChallenge';
 import RedstoneQuiz from '../games/redstone-quiz/RedstoneQuiz';
+import NoteBlockStudio from '../games/note-block/NoteBlockStudio';
 
 export default function GamePage() {
   const { modeId } = useParams<{ modeId: string }>();
@@ -174,7 +175,15 @@ export default function GamePage() {
         />
       )}
 
-      {gameMode !== 'diamond_mine' && gameMode !== 'crafting_table' && gameMode !== 'ender_pearl' && gameMode !== 'redstone_quiz' && (
+      {gameMode === 'note_block' && (
+        <NoteBlockStudio
+          words={words}
+          onAnswer={handleAnswer}
+          onComplete={handleComplete}
+        />
+      )}
+
+      {gameMode !== 'diamond_mine' && gameMode !== 'crafting_table' && gameMode !== 'ender_pearl' && gameMode !== 'redstone_quiz' && gameMode !== 'note_block' && (
         <div className="flex-center" style={{ height: 200, padding: 24 }}>
           <div className="mc-panel" style={{ padding: 24, textAlign: 'center' }}>
             <span style={{ fontSize: 48 }}>🚧</span>
@@ -213,6 +222,7 @@ function getGameTitle(modeId: GameModeId): string {
     crafting_table: '🛠️ Crafting Table',
     ender_pearl: '🎯 Ender Pearl Challenge',
     redstone_quiz: '🔴 Redstone Quiz',
+    note_block: '🎵 Note Block Studio',
     nether_portal: '🌑 Nether Portal Escape',
   };
   return titles[modeId] || 'Game';

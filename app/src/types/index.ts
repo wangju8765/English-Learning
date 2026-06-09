@@ -97,6 +97,7 @@ export type GameModeId =
   | 'crafting_table'
   | 'ender_pearl'
   | 'redstone_quiz'
+  | 'note_block'
   | 'nether_portal';
 
 export interface GameModeMeta {
@@ -144,6 +145,15 @@ export const GAME_MODES: GameModeMeta[] = [
     nameZh: '红石问答',
     description: 'Choose the right word to complete the sentence',
     icon: '🔴',
+    difficulty: 2,
+    unlocked: true,
+  },
+  {
+    id: 'note_block',
+    name: 'Note Block Studio',
+    nameZh: '音符盒工作室',
+    description: 'Listen to the word and spell it — train your ears!',
+    icon: '🎵',
     difficulty: 2,
     unlocked: true,
   },

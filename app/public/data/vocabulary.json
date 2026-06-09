@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "contentHash": "53f54956",
-  "generatedAt": "2026-06-08T04:03:59.710Z",
+  "contentHash": "e2282d4e",
+  "generatedAt": "2026-06-09T03:55:22.680Z",
   "entries": [
     {
       "id": "mac",
@@ -613,6 +613,101 @@
       ],
       "sourceDate": "2026-06-08",
       "parentNotes": "编程中常见，如 utility function（工具函数），指帮助完成通用任务的小程序"
+    },
+    {
+      "id": "calculate",
+      "word": "calculate",
+      "phonetic": "/ˈkælkjəleɪt/",
+      "partOfSpeech": "v.",
+      "definition": "计算；算出",
+      "exampleSentences": [
+        {
+          "english": "The computer can calculate numbers very fast.",
+          "chinese": "电脑计算数字非常快。"
+        },
+        {
+          "english": "Let the program calculate the total score.",
+          "chinese": "让程序来计算总分。"
+        }
+      ],
+      "sourceDate": "2026-06-09",
+      "parentNotes": "编程中经常用到，比如 calculate the sum（计算总和）"
+    },
+    {
+      "id": "calculator",
+      "word": "calculator",
+      "phonetic": "/ˈkælkjəleɪtər/",
+      "partOfSpeech": "n.",
+      "definition": "计算器",
+      "exampleSentences": [
+        {
+          "english": "You can use a calculator to add big numbers.",
+          "chinese": "你可以用计算器来加很大的数字。"
+        },
+        {
+          "english": "There is a calculator app on every computer.",
+          "chinese": "每台电脑上都有一个计算器程序。"
+        }
+      ],
+      "sourceDate": "2026-06-09",
+      "parentNotes": "每个电脑和手机都有自带的计算器应用"
+    },
+    {
+      "id": "double",
+      "word": "double",
+      "phonetic": "/ˈdʌbəl/",
+      "partOfSpeech": "adj./n.",
+      "definition": "两倍的，双重的；双精度浮点数（编程中用于存储小数的变量类型）",
+      "exampleSentences": [
+        {
+          "english": "Six is double of three.",
+          "chinese": "六是三的两倍。"
+        },
+        {
+          "english": "In Java, use double to store numbers with decimals, like 3.14.",
+          "chinese": "在 Java 中，用 double 来存储带小数的数字，比如 3.14。"
+        }
+      ],
+      "sourceDate": "2026-06-09",
+      "parentNotes": "日常英语表示双倍，编程中 double 是一种存储小数的数据类型，比如 double price = 3.14;"
+    },
+    {
+      "id": "line",
+      "word": "line",
+      "phonetic": "/laɪn/",
+      "partOfSpeech": "n.",
+      "definition": "线；行；代码行",
+      "exampleSentences": [
+        {
+          "english": "Draw a straight line on the paper.",
+          "chinese": "在纸上画一条直线。"
+        },
+        {
+          "english": "This program is only ten lines of code.",
+          "chinese": "这个程序只有十行代码。"
+        }
+      ],
+      "sourceDate": "2026-06-09",
+      "parentNotes": "编程中常说 line of code（一行代码），平时也可以指排队或画线"
+    },
+    {
+      "id": "format",
+      "word": "format",
+      "phonetic": "/ˈfɔːrmæt/",
+      "partOfSpeech": "n./v.",
+      "definition": "格式；格式化",
+      "exampleSentences": [
+        {
+          "english": "You can change the format of the text to make it bold.",
+          "chinese": "你可以改变文本的格式让它变粗。"
+        },
+        {
+          "english": "Use the formatter to format your code nicely.",
+          "chinese": "用格式化工具让你的代码看起来整齐。"
+        }
+      ],
+      "sourceDate": "2026-06-09",
+      "parentNotes": "编程中常用来组织代码或数据的显示方式，比如 format the text（格式化文本）"
     }
   ]
 }
