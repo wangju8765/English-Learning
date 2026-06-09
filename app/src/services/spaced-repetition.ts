@@ -1,9 +1,23 @@
 // ============================================================
 // Spaced Repetition Algorithm — Simplified SM-2 variant
 // ============================================================
-import type { WordState, MasteryLevel } from '../types';
+import type { WordState, MasteryLevel, GameModeId } from '../types';
 import { MASTERY_INTERVALS } from '../types';
 import { getTodayDate } from './storage';
+
+// --- Mastery Range per Game Mode ---
+// Each mode targets words at a specific mastery stage,
+// matching the mode's difficulty to the learner's readiness.
+
+export const MASTERY_RANGE: Record<GameModeId, { min: MasteryLevel; max: MasteryLevel }> = {
+  echo_chamber:   { min: 0, max: 0 },  // Brand new words — sound→letter mapping
+  note_block:     { min: 0, max: 1 },  // Recently seen — syllable reinforcement
+  crafting_table: { min: 1, max: 2 },  // Building familiarity — free spelling
+  diamond_mine:   { min: 0, max: 3 },  // Wide range — recognition works at any level
+  ender_pearl:    { min: 2, max: 3 },  // Confident words — speed challenge
+  redstone_quiz:  { min: 2, max: 4 },  // Known words — contextual understanding
+  nether_portal:  { min: 3, max: 5 },  // Mastered words — boss check
+};
 
 export function processAnswer(
   word: WordState,
@@ -114,6 +128,70 @@ export function selectSessionWords(
   addWords(dueToday, count - selected.length);
   // If still not enough, add any words
   const remaining = allWords.filter((w) => !used.has(w.id));
+  addWords(remaining, count - selected.length);
+
+  return selected;
+}
+
+/**
+ * Select session words filtered by the game mode's target mastery range.
+ * Falls back gracefully if the target pool doesn't have enough words.
+ */
+export function selectWordsForMode(
+  allWords: WordState[],
+  count: number,
+  gameMode: GameModeId
+): WordState[] {
+  const today = getTodayDate();
+  const range = MASTERY_RANGE[gameMode];
+
+  if (allWords.length === 0) return [];
+
+  // 1. Filter to target mastery range
+  const inRange = allWords.filter(
+    (w) => w.masteryLevel >= range.min && w.masteryLevel <= range.max
+  );
+
+  // 2. If not enough words in range, gradually widen
+  let pool = inRange;
+  if (pool.length < count) {
+    // Expand range by 1 in each direction
+    const expandedMin = Math.max(0, range.min - 1) as MasteryLevel;
+    const expandedMax = Math.min(5, range.max + 1) as MasteryLevel;
+    pool = allWords.filter(
+      (w) => w.masteryLevel >= expandedMin && w.masteryLevel <= expandedMax
+    );
+  }
+  // Final fallback: use all words
+  if (pool.length < count) {
+    pool = allWords;
+  }
+
+  // 3. Within the pool, apply priority: overdue > new > due
+  const overdue = pool.filter((w) => w.nextReviewDate <= today && w.masteryLevel < 4);
+  const newWords = pool.filter((w) => w.masteryLevel === 0 && w.totalAttempts === 0);
+  const dueToday = pool.filter(
+    (w) => w.nextReviewDate <= today && !overdue.includes(w) && !newWords.includes(w)
+  );
+
+  const selected: WordState[] = [];
+  const used = new Set<string>();
+
+  function addWords(source: WordState[], _max: number) {
+    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    for (const w of shuffled) {
+      if (selected.length >= count) break;
+      if (!used.has(w.id)) {
+        selected.push(w);
+        used.add(w.id);
+      }
+    }
+  }
+
+  addWords(overdue, Math.floor(count * 0.6));
+  addWords(newWords, Math.floor(count * 0.3));
+  addWords(dueToday, count - selected.length);
+  const remaining = pool.filter((w) => !used.has(w.id));
   addWords(remaining, count - selected.length);
 
   return selected;

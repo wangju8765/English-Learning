@@ -3,9 +3,10 @@
 // ============================================================
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
-import { getLevel } from '../types';
+import { getLevel, XP_CONFIG } from '../types';
 import { selectSessionWords, getMasteredCount, getAccuracy } from '../services/spaced-repetition';
 import { getTodayDate } from '../services/storage';
+import LearningDashboard from '../components/LearningDashboard';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function HomePage() {
   const todaySessions = state.sessions.filter((s) => s.date === today);
   const completedModes = new Set(todaySessions.filter((s) => s.completed).map((s) => s.gameMode));
   const dailyQuestProgress = completedModes.size;
-  const dailyQuestTarget = 2;
+  const dailyQuestTarget = XP_CONFIG.DAILY_QUEST_TARGET;
   const dailyQuestComplete = dailyQuestProgress >= dailyQuestTarget;
 
   // Words available for review
@@ -88,6 +89,13 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Learning Journey Dashboard */}
+      <LearningDashboard
+        streakDays={state.player.streakDays}
+        allWords={allWords}
+        todaySessions={todaySessions}
+      />
+
       {/* Daily Quest Card */}
       <div
         className="mc-panel"
@@ -104,7 +112,7 @@ export default function HomePage() {
               Daily Quest
             </span>
             <span style={{ color: '#AAA', fontSize: 11, marginLeft: 8 }}>
-              Complete {dailyQuestTarget} game modes
+              Complete {dailyQuestTarget} different game modes
             </span>
           </div>
           {dailyQuestComplete ? (
@@ -185,10 +193,10 @@ export default function HomePage() {
       {/* Daily Tip */}
       <div className="mc-panel" style={{ padding: 12, background: 'rgba(255,193,7,0.06)' }}>
         <p className="pixel-text-sm" style={{ color: '#FFC107', fontSize: 8, marginBottom: 4 }}>
-          💡 Daily Tip
+          💡 Learning Path
         </p>
         <p style={{ color: '#CCC', fontSize: 12 }}>
-          Play at least 2 different game modes each day to complete the Daily Quest and earn bonus XP!
+          New words? Start with 🎤 Echo Chamber to learn the sounds, then practice with other modes. Come back each day to unlock new challenges and build your 🔥 streak!
         </p>
       </div>
     </div>

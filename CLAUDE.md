@@ -69,7 +69,7 @@ vocabulary/           ← 每日词汇 md（用户维护）
 app/
   src/
     App.tsx           ← 根组件 + 路由
-    components/       ← 共享 UI 组件（Layout, AudioButton, WordDisplay）
+    components/       ← 共享 UI 组件（Layout, AudioButton, WordDisplay, LearningDashboard）
     games/            ← 6 种已实现的游戏模式
       diamond-mine/    ← ⛏️ 钻石矿工（3×3 词义识别）
       crafting-table/  ← 🛠️ 工作台（点击拼词）
@@ -91,17 +91,25 @@ app/
   deploy.yml          ← CI/CD 自动部署
 ```
 
-## 学习路径
+## 学习路径（2026-06-09 重构 v2）
+
+**所有 6 个常规模式从 Day 1 起每天可用**，鼓励充分的学习时间。通过 mastery 范围路由确保词难度匹配。
 
 ```
-新词 → 🎤 Echo Chamber（逐字母拼读，建立音→字母映射）
-  ↓
-巩固 → 🎵 Note Block Studio（音节拆分→照抄→独立听写）
-  ↓
-练习 → 🛠️ Crafting Table / 🎯 Ender Pearl Challenge
-  ↓
-应用 → 🔴 Redstone Quiz（句子语境） / ⛏️ Diamond Mine（词义识别）
+推荐顺序（非强制）：
+  入门：🎤 Echo Chamber（逐字母拼读）→ 建立音→字母映射
+  巩固：🎵 Note Block Studio（三阶段听→写）
+  练习：🛠️ Crafting Table（自主拼写）
+  识别：⛏️ Diamond Mine（词义辨认）
+  挑战：🎯 Ender Pearl（限时拼词）
+  应用：🔴 Redstone Quiz（句子语境）
+  BOSS：🌑 Nether Portal（需 streak≥6 + 今日完成≥3 模式解锁）
 ```
+
+**解锁机制**：常规模式始终可用。Nether Portal 需满足 `streakDays ≥ 6 AND 今日完成 ≥ 3 个模式`。
+**词汇路由**：`selectWordsForMode` 按 mastery 范围分配（Echo=新词 mastery0, Crafting=练习词 1-2, Nether=已掌握词 3-5）。
+**每日任务**：完成 3 个不同模式 = +50 XP（`DAILY_QUEST_TARGET = 3`）。
+**学习看板**：HomePage 显示今日进度 + Portal 解锁条件双进度条 + 熟练度分布 + 推荐。
 
 ## 游戏模式（6/7 已实现）
 

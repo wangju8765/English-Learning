@@ -114,12 +114,30 @@ export interface GameModeMeta {
 
 export const GAME_MODES: GameModeMeta[] = [
   {
+    id: 'echo_chamber',
+    name: 'Echo Chamber',
+    nameZh: '回音密室',
+    description: 'Listen to letter-by-letter spelling and repeat — perfect for learning new words!',
+    icon: '🎤',
+    difficulty: 1,
+    unlocked: true,
+  },
+  {
     id: 'diamond_mine',
     name: 'Diamond Mine',
     nameZh: '钻石矿工',
     description: 'Click the correct English word for the Chinese meaning',
     icon: '⛏️',
     difficulty: 1,
+    unlocked: true,
+  },
+  {
+    id: 'note_block',
+    name: 'Note Block Studio',
+    nameZh: '音符盒工作室',
+    description: '3-stage training: syllables → copy → independent. Build your listening-to-spelling skills step by step!',
+    icon: '🎵',
+    difficulty: 2,
     unlocked: true,
   },
   {
@@ -135,7 +153,7 @@ export const GAME_MODES: GameModeMeta[] = [
     id: 'ender_pearl',
     name: 'Ender Pearl Challenge',
     nameZh: '末影珍珠挑战',
-    description: 'Type the English word before the Ender Dragon flies away',
+    description: 'Spell the English word before the Ender Dragon flies away',
     icon: '🎯',
     difficulty: 3,
     unlocked: true,
@@ -150,34 +168,40 @@ export const GAME_MODES: GameModeMeta[] = [
     unlocked: true,
   },
   {
-    id: 'echo_chamber',
-    name: 'Echo Chamber',
-    nameZh: '回音密室',
-    description: 'Listen to letter-by-letter spelling and repeat — perfect for learning new words!',
-    icon: '🎤',
-    difficulty: 1,
-    unlocked: true,
-  },
-  {
-    id: 'note_block',
-    name: 'Note Block Studio',
-    nameZh: '音符盒工作室',
-    description: '3-stage training: copy → assisted → independent. Build your listening-to-spelling skills step by step!',
-    icon: '🎵',
-    difficulty: 2,
-    unlocked: true,
-  },
-  {
     id: 'nether_portal',
     name: 'Nether Portal Escape',
     nameZh: '下界传送门逃脱',
-    description: 'Boss level — prove you have mastered this week\'s words!',
+    description: 'Boss level — prove you have mastered this week\'s words! Requires 6-day streak + 3 modes completed today.',
     icon: '🌑',
     difficulty: 3,
     unlocked: false,
-    unlockDay: 6,
+    unlockDay: 6, // Minimum streak days required
   },
 ];
+
+/** All modes except the Nether Portal boss — these are always playable. */
+export function getRegularModes(): GameModeMeta[] {
+  return GAME_MODES.filter((m) => m.id !== 'nether_portal');
+}
+
+/** Get the Nether Portal mode entry. */
+export function getPortalMode(): GameModeMeta {
+  return GAME_MODES.find((m) => m.id === 'nether_portal')!;
+}
+
+/** Portal requirements */
+export const PORTAL_STREAK_REQUIRED = 6;
+export const PORTAL_DAILY_MODES_REQUIRED = 3;
+
+/**
+ * Nether Portal unlocks when the player has:
+ * 1. A streak of at least 6 consecutive days, AND
+ * 2. Completed 3+ different game modes today
+ * This ensures it's a reward for consistent daily effort, not just calendar time.
+ */
+export function isPortalUnlocked(streakDays: number, completedModesToday: number): boolean {
+  return streakDays >= PORTAL_STREAK_REQUIRED && completedModesToday >= PORTAL_DAILY_MODES_REQUIRED;
+}
 
 // --- Game Engine ---
 
@@ -270,6 +294,7 @@ export interface PersistedState {
 export const XP_CONFIG = {
   BASE_CORRECT: 10,
   PERFECT_SESSION_BONUS: 25,
+  DAILY_QUEST_TARGET: 3, // Complete 3 different modes for daily quest
   DAILY_QUEST_BONUS: 50,
   STREAK_BONUS_PER_DAY: 5,
   STREAK_BONUS_CAP: 25,

@@ -246,11 +246,11 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         bonusReasons.push('Perfect!');
       }
 
-      // Daily quest bonus: complete 2 game modes in one day
+      // Daily quest bonus: complete N game modes in one day
       const completedTodayBefore = state.sessions.filter(
         (s) => s.date === today && s.completed
       ).length;
-      if (completed && completedTodayBefore < 2 && completedTodayBefore + 1 >= 2) {
+      if (completed && completedTodayBefore < XP_CONFIG.DAILY_QUEST_TARGET && completedTodayBefore + 1 >= XP_CONFIG.DAILY_QUEST_TARGET) {
         bonusXp += XP_CONFIG.DAILY_QUEST_BONUS;
         bonusReasons.push('Daily Quest Complete!');
       }
