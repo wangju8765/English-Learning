@@ -1,11 +1,14 @@
 // ============================================================
-// Note Block Studio — listen to the word, then spell it
+// Note Block Studio — 3-stage scaffolding for listen→spell
+// Stage 1 🟢 Copy:   template shown, guided clicking
+// Stage 2 🟡 Assisted: syllable groups + vowel highlights
+// Stage 3 🟠 Independent: pure audio, no visual help
 // ============================================================
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameWord, GameProgress } from '../../types';
 import { NoteBlockEngine } from './NoteBlockEngine';
-import type { NoteBlockTier } from './NoteBlockEngine';
-import { speakWord, speakSequence, speak, stopSpeech } from '../../services/speech';
+import type { NoteBlockStage, StageQuestion } from './NoteBlockEngine';
+import { speakWord, speak, stopSpeech } from '../../services/speech';
 import { playClick, playBlockBreak, playFail, playGameComplete } from '../../services/sound';
 import { useApp } from '../../store/AppContext';
 
@@ -15,24 +18,34 @@ interface NoteBlockStudioProps {
   onComplete: (progress: GameProgress) => void;
 }
 
+const STAGE_LABELS: Record<NoteBlockStage, string> = {
+  1: 'COPY',
+  2: 'ASSISTED',
+  3: 'INDEPENDENT',
+};
+
+const STAGE_EMOJI: Record<NoteBlockStage, string> = {
+  1: '🟢',
+  2: '🟡',
+  3: '🟠',
+};
+
+const STAGE_INSTRUCTIONS: Record<NoteBlockStage, string> = {
+  1: '对照下面的拼写点击字母',
+  2: '注意每个音节的发音',
+  3: '根据读音拼出来',
+};
+
 export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlockStudioProps) {
   const { state } = useApp();
   const soundEnabled = state.settings.soundEnabled;
   const engineRef = useRef<NoteBlockEngine | null>(null);
-  const [question, setQuestion] = useState<{
-    wordId: string;
-    definition: string;
-    phonetic?: string;
-    letters: string[];
-    correctAnswer: string;
-    tier: NoteBlockTier;
-  } | null>(null);
+  const [stageQuestion, setStageQuestion] = useState<StageQuestion | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
   const [feedback, setFeedback] = useState<{
     correct: boolean;
     showAnswer: string;
-    userAnswer?: string;
   } | null>(null);
   const [progress, setProgress] = useState<GameProgress>({
     currentQuestion: 0, totalQuestions: 0, correctCount: 0,
@@ -40,12 +53,12 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
   });
   const [isComplete, setIsComplete] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
+  const [rejectLetter, setRejectLetter] = useState<number | null>(null); // Stage 1: flash rejected letter
   const answerStartRef = useRef<number>(Date.now());
   const speechIdRef = useRef<number>(0);
   const nextQuestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackSpeechTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (nextQuestionTimerRef.current) clearTimeout(nextQuestionTimerRef.current);
@@ -63,15 +76,8 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
   }, [words]);
 
   const loadQuestion = useCallback((engine: NoteBlockEngine) => {
-    // Clear pending timers
-    if (nextQuestionTimerRef.current) {
-      clearTimeout(nextQuestionTimerRef.current);
-      nextQuestionTimerRef.current = null;
-    }
-    if (feedbackSpeechTimerRef.current) {
-      clearTimeout(feedbackSpeechTimerRef.current);
-      feedbackSpeechTimerRef.current = null;
-    }
+    if (nextQuestionTimerRef.current) { clearTimeout(nextQuestionTimerRef.current); nextQuestionTimerRef.current = null; }
+    if (feedbackSpeechTimerRef.current) { clearTimeout(feedbackSpeechTimerRef.current); feedbackSpeechTimerRef.current = null; }
     stopSpeech();
 
     const q = engine.nextQuestion();
@@ -83,67 +89,67 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
       return;
     }
 
-    const tier = engine.getCurrentTier();
-
-    setQuestion({
-      wordId: q.wordId,
-      definition: q.prompt,
-      phonetic: q.phonetic,
-      letters: q.options || [],
-      correctAnswer: q.correctAnswer,
-      tier,
-    });
+    const sq = engine.getStageQuestion();
+    setStageQuestion(sq);
     setSlots([]);
     setUsedIndices(new Set());
     setFeedback(null);
     setHintUsed(false);
     answerStartRef.current = Date.now();
 
-    // Speech: different pattern per tier
+    // Speech varies by stage
     const speechId = ++speechIdRef.current;
+    const stage = engine.getCurrentStage();
     (async () => {
-      if (tier === 'green') {
-        // Green tier: word → instruction → definition → word (same as CraftingTable)
-        await speakWord(q.correctAnswer, 0.85);
+      await speakWord(q.correctAnswer, 0.9);
+      if (speechId !== speechIdRef.current) return;
+      await new Promise(r => setTimeout(r, 400));
+      if (speechId !== speechIdRef.current) return;
+
+      if (stage === 1) {
+        // Stage 1: word → instruction → definition → word
+        await speak(STAGE_INSTRUCTIONS[stage], 1.0, 'zh');
         if (speechId !== speechIdRef.current) return;
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300));
         if (speechId !== speechIdRef.current) return;
-        await speakSequence([
-          { text: '请拼出这个单词', lang: 'zh', pauseMs: 400 },
-          { text: q.prompt, lang: 'zh', pauseMs: 600 },
-        ]);
-        if (speechId !== speechIdRef.current) return;
-        await speakWord(q.correctAnswer, 0.85);
+        await speak(q.prompt, 1.0, 'zh');
+      } else if (stage === 2) {
+        // Stage 2: word → instruction → word
+        await speak(STAGE_INSTRUCTIONS[stage], 1.0, 'zh');
       } else {
-        // Orange tier: word → instruction → word (NO definition — pure listening)
-        await speakWord(q.correctAnswer, 0.9);
-        if (speechId !== speechIdRef.current) return;
-        await new Promise(r => setTimeout(r, 500));
-        if (speechId !== speechIdRef.current) return;
-        await speak('根据读音拼出来', 1.0, 'zh');
-        if (speechId !== speechIdRef.current) return;
-        await new Promise(r => setTimeout(r, 500));
-        if (speechId !== speechIdRef.current) return;
-        await speakWord(q.correctAnswer, 0.9);
+        // Stage 3: word → instruction → word
+        await speak(STAGE_INSTRUCTIONS[stage], 1.0, 'zh');
       }
+      if (speechId !== speechIdRef.current) return;
+      await new Promise(r => setTimeout(r, 500));
+      if (speechId !== speechIdRef.current) return;
+      await speakWord(q.correctAnswer, 0.9);
     })().catch(() => {});
   }, [onComplete, soundEnabled]);
 
-  // Replay the word audio (orange tier only — useful "listen again")
-  const handleListenAgain = useCallback(() => {
-    if (!question || feedback) return;
+  // --- Stage 2: per-syllable audio ---
+  const handleSyllableClick = useCallback((syllableLetters: string[]) => {
+    if (feedback) return;
     stopSpeech();
-    speakWord(question.correctAnswer, 0.9).catch(() => {});
-  }, [question, feedback]);
+    const syllableText = syllableLetters.join('');
+    // Read the syllable as "s y l l a b l e" not as a word
+    speak(syllableText, 0.8, 'en').catch(() => {});
+  }, [feedback]);
 
-  // Hint: reveal the first letter
+  // --- Listen again ---
+  const handleListenAgain = useCallback(() => {
+    if (!stageQuestion || feedback) return;
+    stopSpeech();
+    speakWord(stageQuestion.correctAnswer, 0.9).catch(() => {});
+  }, [stageQuestion, feedback]);
+
+  // --- Hint (Stage 2/3): reveal first letter ---
   const handleHint = useCallback(() => {
-    if (!question || feedback || hintUsed) return;
+    if (!stageQuestion || feedback || hintUsed) return;
     if (soundEnabled) playClick();
 
-    const firstLetter = question.correctAnswer[0].toLowerCase();
-    // Find the index of the first occurrence of this letter in the pool
-    const poolIndex = question.letters.findIndex(
+    const firstLetter = stageQuestion.correctAnswer[0].toLowerCase();
+    const poolIndex = stageQuestion.letters.findIndex(
       (l, i) => l === firstLetter && !usedIndices.has(i)
     );
 
@@ -155,31 +161,72 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
       setUsedIndices(newUsed);
       setHintUsed(true);
     }
-  }, [question, slots, usedIndices, feedback, hintUsed, soundEnabled]);
+  }, [stageQuestion, slots, usedIndices, feedback, hintUsed, soundEnabled]);
 
   const handleSubmitRef = useRef<(currentSlots: string[]) => void>(() => {});
 
+  // --- Letter click (behavior differs by stage) ---
   const handleLetterClick = useCallback(
     (letter: string, index: number) => {
-      if (!question || usedIndices.has(index) || feedback) return;
+      if (!stageQuestion || usedIndices.has(index) || feedback) return;
 
-      if (soundEnabled) playClick();
+      const stage = stageQuestion.stage;
 
-      const newSlots = [...slots, letter];
-      const newUsed = new Set(usedIndices);
-      newUsed.add(index);
+      if (stage === 1) {
+        // Stage 1 (Copy): only accept letters that match remaining unfilled template positions
+        const template = stageQuestion.correctAnswer.split('');
+        const slotArray = [...slots];
+        // Pad slots to template length
+        while (slotArray.length < template.length) slotArray.push('');
 
-      setSlots(newSlots);
-      setUsedIndices(newUsed);
+        let matched = false;
+        for (let pos = 0; pos < template.length; pos++) {
+          if (slotArray[pos] === '' && template[pos] === letter) {
+            // Fill this position
+            slotArray[pos] = letter;
+            matched = true;
+            break;
+          }
+        }
 
-      // Auto-submit when slots are full
-      if (newSlots.length === question.correctAnswer.length) {
-        setTimeout(() => {
-          handleSubmitRef.current(newSlots);
-        }, 300);
+        if (!matched) {
+          // Reject: flash the letter briefly
+          if (soundEnabled) playFail();
+          setRejectLetter(index);
+          setTimeout(() => setRejectLetter(null), 400);
+          return;
+        }
+
+        if (soundEnabled) playClick();
+
+        // Update slots and usedIndices
+        const newSlotsFiltered = slotArray.filter(l => l !== '');
+        const newUsed = new Set(usedIndices);
+        newUsed.add(index);
+
+        setSlots(newSlotsFiltered);
+        setUsedIndices(newUsed);
+
+        if (newSlotsFiltered.length === stageQuestion.correctAnswer.length) {
+          setTimeout(() => { handleSubmitRef.current(newSlotsFiltered); }, 300);
+        }
+      } else {
+        // Stage 2/3: normal letter clicking (same as CraftingTable)
+        if (soundEnabled) playClick();
+
+        const newSlots = [...slots, letter];
+        const newUsed = new Set(usedIndices);
+        newUsed.add(index);
+
+        setSlots(newSlots);
+        setUsedIndices(newUsed);
+
+        if (newSlots.length === stageQuestion.correctAnswer.length) {
+          setTimeout(() => { handleSubmitRef.current(newSlots); }, 300);
+        }
       }
     },
-    [question, slots, usedIndices, feedback, soundEnabled]
+    [stageQuestion, slots, usedIndices, feedback, soundEnabled]
   );
 
   const handleRemoveLetter = useCallback(
@@ -189,9 +236,8 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
 
       const newSlots = slots.filter((_, i) => i !== slotIndex);
 
-      // Rebuild usedIndices from newSlots
       const rebuiltUsed = new Set<number>();
-      const remaining = [...(question?.letters || [])];
+      const remaining = [...(stageQuestion?.letters || [])];
       for (const slotLetter of newSlots) {
         for (let i = 0; i < remaining.length; i++) {
           if (remaining[i] === slotLetter) {
@@ -205,12 +251,12 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
       setSlots(newSlots);
       setUsedIndices(rebuiltUsed);
     },
-    [slots, question, feedback, soundEnabled]
+    [slots, stageQuestion, feedback, soundEnabled]
   );
 
   const handleSubmit = useCallback(
     (currentSlots: string[]) => {
-      if (!engineRef.current || !question || feedback) return;
+      if (!engineRef.current || !stageQuestion || feedback) return;
 
       const answer = currentSlots.join('');
       const responseTimeMs = Date.now() - answerStartRef.current;
@@ -220,10 +266,9 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
         if (soundEnabled) playBlockBreak();
 
         setFeedback({ correct: true, showAnswer: result.correctAnswer });
-        onAnswer(question.wordId, true, responseTimeMs);
+        onAnswer(stageQuestion.wordId, true, responseTimeMs);
         setProgress(engineRef.current.getProgress());
 
-        // Speak the word for reinforcement
         feedbackSpeechTimerRef.current = setTimeout(() => {
           speakWord(result.correctAnswer).catch(() => {});
         }, 200);
@@ -235,32 +280,31 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
       } else {
         if (soundEnabled) playFail();
 
-        // Fill slots with the correct answer
         const correctLetters = result.correctAnswer.toLowerCase().split('');
         setSlots(correctLetters);
 
         setFeedback({
           correct: false,
           showAnswer: result.correctAnswer,
-          userAnswer: answer,
         });
 
-        onAnswer(question.wordId, false, responseTimeMs);
+        onAnswer(stageQuestion.wordId, false, responseTimeMs);
         setProgress(engineRef.current.getProgress());
 
-        // Slow-read the correct word
+        // For Stage 2 error: replay the syllable audio for incorrect positions
+        // (handled by the feedback display below)
+
         feedbackSpeechTimerRef.current = setTimeout(() => {
           speakWord(result.correctAnswer, 0.85).catch(() => {});
         }, 400);
 
-        // Longer display for learning
         nextQuestionTimerRef.current = setTimeout(() => {
           nextQuestionTimerRef.current = null;
           if (engineRef.current) loadQuestion(engineRef.current);
         }, 3500);
       }
     },
-    [question, feedback, onAnswer, loadQuestion, soundEnabled]
+    [stageQuestion, feedback, onAnswer, loadQuestion, soundEnabled]
   );
 
   handleSubmitRef.current = handleSubmit;
@@ -288,8 +332,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
     );
   }
 
-  // --- Loading state ---
-  if (!question) {
+  if (!stageQuestion) {
     return (
       <div className="flex-center" style={{ height: 200 }}>
         <span className="pixel-text" style={{ color: 'var(--text-muted)' }}>
@@ -299,17 +342,34 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
     );
   }
 
-  const totalSlots = question.correctAnswer.length;
-  const tier = question.tier;
+  const stage = stageQuestion.stage;
+  const totalSlots = stageQuestion.correctAnswer.length;
+  const wordIdx = engineRef.current?.getCurrentWordIndex() ?? 0;
+  const totalWords = engineRef.current?.getTotalWords() ?? 0;
 
-  // Tier colors
-  const tierAccentColor = tier === 'green' ? 'var(--color-xp)' : 'var(--color-gold)';
-  const tierBgGradient = tier === 'green'
-    ? 'linear-gradient(180deg, rgba(128,255,32,0.06) 0%, rgba(80,200,20,0.02) 100%)'
-    : 'linear-gradient(180deg, rgba(255,193,7,0.06) 0%, rgba(200,150,0,0.02) 100%)';
-  const tierBorderColor = tier === 'green'
-    ? 'rgba(128,255,32,0.15) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(128,255,32,0.08)'
-    : 'rgba(255,193,7,0.15) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(255,193,7,0.08)';
+  // Stage theme colors
+  const stageColors: Record<NoteBlockStage, { accent: string; bg: string; border: string; dim: string }> = {
+    1: {
+      accent: 'var(--color-xp)',
+      bg: 'linear-gradient(180deg, rgba(128,255,32,0.06) 0%, rgba(80,200,20,0.02) 100%)',
+      border: 'rgba(128,255,32,0.15) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(128,255,32,0.08)',
+      dim: 'var(--color-xp-dim)',
+    },
+    2: {
+      accent: 'var(--color-gold)',
+      bg: 'linear-gradient(180deg, rgba(255,193,7,0.06) 0%, rgba(200,150,0,0.02) 100%)',
+      border: 'rgba(255,193,7,0.15) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(255,193,7,0.08)',
+      dim: '#B8860B',
+    },
+    3: {
+      accent: '#FF9800',
+      bg: 'linear-gradient(180deg, rgba(255,152,0,0.06) 0%, rgba(200,100,0,0.02) 100%)',
+      border: 'rgba(255,152,0,0.15) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(255,152,0,0.08)',
+      dim: '#E65100',
+    },
+  };
+
+  const colors = stageColors[stage];
 
   return (
     <div className="flex-col gap-md" style={{ padding: 16 }}>
@@ -317,7 +377,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
       <div>
         <div className="flex-between" style={{ marginBottom: 4 }}>
           <span className="pixel-text-sm" style={{ color: 'var(--text-secondary)', fontSize: 8 }}>
-            Word {progress.currentQuestion + 1}/{progress.totalQuestions}
+            Word {wordIdx + 1}/{totalWords} · Stage {stage}/3
           </span>
           <span className="pixel-text-sm" style={{ color: 'var(--text-secondary)', fontSize: 8 }}>
             ⭐ {progress.xpEarned} XP
@@ -327,77 +387,170 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
           <div
             className="progress-bar-fill"
             style={{
-              width: `${(progress.currentQuestion / Math.max(progress.totalQuestions, 1)) * 100}%`,
-              background: `linear-gradient(90deg, ${tier === 'green' ? 'var(--color-xp-dim)' : '#B8860B'}, ${tierAccentColor})`,
+              width: `${((wordIdx * 3 + stage) / (totalWords * 3)) * 100}%`,
+              background: `linear-gradient(90deg, ${colors.dim}, ${colors.accent})`,
             }}
           />
         </div>
       </div>
 
-      {/* Tier indicator */}
+      {/* Stage indicator */}
       <div style={{ textAlign: 'center' }}>
         <span
           className="pixel-text-sm"
           style={{
             fontSize: 7,
-            color: tierAccentColor,
+            color: colors.accent,
             padding: '3px 10px',
-            border: `1px solid ${tierAccentColor}33`,
+            border: `1px solid ${colors.accent}33`,
             borderRadius: 8,
-            background: `${tierAccentColor}11`,
+            background: `${colors.accent}11`,
           }}
         >
-          {tier === 'green' ? '🟢 GREEN NOTE' : '🟠 ORANGE NOTE'}
+          {STAGE_EMOJI[stage]} {STAGE_LABELS[stage]}
         </span>
       </div>
 
-      {/* Note Block Panel — shows definition (green) or audio-only prompt (orange) */}
+      {/* Main panel — content varies by stage */}
       <div
         className="mc-panel"
         style={{
-          padding: tier === 'green' ? '20px 16px' : '24px 16px',
+          padding: '20px 16px',
           textAlign: 'center',
-          borderColor: tierBorderColor,
-          background: tierBgGradient,
+          borderColor: colors.border,
+          background: colors.bg,
         }}
       >
         <div className="pixel-text-sm" style={{ color: 'var(--text-muted)', fontSize: 7, marginBottom: 12 }}>
           🎵 NOTE BLOCK STUDIO
         </div>
 
-        {tier === 'green' ? (
-          // Green Tier: show definition + phonetic (warm-up)
+        {/* Stage 1: Template word + definition */}
+        {stage === 1 && (
           <>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 10 }}>
+              {STAGE_INSTRUCTIONS[1]}
+            </div>
+
+            {/* Template word — gray reference letters */}
             <div
               style={{
-                fontSize: 16,
-                color: 'var(--color-gold)',
-                marginBottom: question.phonetic ? 6 : 0,
-                animation: 'fadeInUp 0.3s ease-out',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 4,
+                marginBottom: 8,
+                flexWrap: 'wrap',
               }}
             >
-              {question.definition}
+              {stageQuestion.correctAnswer.split('').map((letter, i) => {
+                const filled = slots.length > i && slots[i] === letter;
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      width: 30,
+                      height: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      color: filled ? 'var(--color-xp)' : 'rgba(255,255,255,0.3)',
+                      border: `1px solid ${filled ? 'var(--color-xp)' : 'rgba(255,255,255,0.1)'}`,
+                      borderRadius: 3,
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {letter}
+                  </div>
+                );
+              })}
             </div>
-            {question.phonetic && (
+
+            {stageQuestion.definition && (
+              <div style={{ fontSize: 14, color: 'var(--color-gold)', marginBottom: 4 }}>
+                {stageQuestion.definition}
+              </div>
+            )}
+            {stageQuestion.phonetic && (
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                /{question.phonetic}/
+                /{stageQuestion.phonetic}/
               </div>
             )}
           </>
-        ) : (
-          // Orange Tier: audio only — note block animation placeholder
-          <div className="flex-col" style={{ alignItems: 'center', gap: 8, animation: 'fadeInUp 0.3s ease-out' }}>
-            {/* Animated note block icon */}
+        )}
+
+        {/* Stage 2: Syllable groups + vowel highlights */}
+        {stage === 2 && stageQuestion.syllables && (
+          <>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 12 }}>
+              {STAGE_INSTRUCTIONS[2]}
+            </div>
+
             <div
               style={{
-                fontSize: 40,
-                filter: 'drop-shadow(0 0 8px rgba(255,193,7,0.3))',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 8,
+                flexWrap: 'wrap',
+                marginBottom: 4,
+                animation: 'fadeInUp 0.3s ease-out',
               }}
             >
+              {stageQuestion.syllables.map((syl, si) => (
+                <button
+                  key={si}
+                  className="mc-panel"
+                  onClick={() => handleSyllableClick(syl.letters)}
+                  disabled={!!feedback}
+                  style={{
+                    display: 'flex',
+                    gap: 2,
+                    padding: '8px 10px',
+                    cursor: feedback ? 'default' : 'pointer',
+                    background: 'rgba(255,193,7,0.06)',
+                    borderColor: 'rgba(255,193,7,0.2) rgba(0,0,0,0.4) rgba(0,0,0,0.4) rgba(255,193,7,0.1)',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {syl.letters.map((letter, li) => {
+                    const globalIdx = syl.startIndex + li;
+                    const isVowel = stageQuestion.vowelIndices?.has(globalIdx);
+                    return (
+                      <span
+                        key={li}
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 700,
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                          color: isVowel ? 'var(--color-gold)' : '#FFF',
+                          borderBottom: isVowel ? '2px solid var(--color-gold)' : '2px solid transparent',
+                          paddingBottom: 1,
+                        }}
+                      >
+                        {letter}
+                      </span>
+                    );
+                  })}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 9, color: 'var(--text-muted)', opacity: 0.6 }}>
+              🔈 Tap a syllable to hear it
+            </div>
+          </>
+        )}
+
+        {/* Stage 3: Pure audio — note block animation */}
+        {stage === 3 && (
+          <div className="flex-col" style={{ alignItems: 'center', gap: 8, animation: 'fadeInUp 0.3s ease-out' }}>
+            <div style={{ fontSize: 40, filter: 'drop-shadow(0 0 8px rgba(255,152,0,0.3))' }}>
               🎵
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 260, lineHeight: 1.6 }}>
-              仔细听 — 根据读音拼出单词
+              {STAGE_INSTRUCTIONS[3]}
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', opacity: 0.6 }}>
               Listen carefully and spell the word
@@ -409,13 +562,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
       {/* Feedback */}
       <div style={{ minHeight: 28, textAlign: 'center' }}>
         {feedback && feedback.correct && (
-          <div
-            style={{
-              animation: 'fadeInUp 0.2s ease-out',
-              color: 'var(--color-xp)',
-              fontSize: 13,
-            }}
-          >
+          <div style={{ animation: 'fadeInUp 0.2s ease-out', color: 'var(--color-xp)', fontSize: 13 }}>
             ✅ 正确！{feedback.showAnswer}
           </div>
         )}
@@ -439,15 +586,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
 
       {/* Crafting slots */}
       <div className="mc-panel" style={{ padding: 12, overflowX: 'auto' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 4,
-            flexWrap: 'nowrap',
-            maxWidth: '100%',
-          }}
-        >
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, flexWrap: 'nowrap', maxWidth: '100%' }}>
           {Array.from({ length: totalSlots }).map((_, i) => {
             const letter = slots[i] || '';
             const filled = i < slots.length;
@@ -475,13 +614,13 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
                   border: isError
                     ? '2px solid var(--color-redstone)'
                     : filled
-                      ? `2px solid ${isHintLetter ? tierAccentColor : 'var(--color-diamond)'}`
+                      ? `2px solid ${isHintLetter ? colors.accent : 'var(--color-diamond)'}`
                       : '2px dashed rgba(255,255,255,0.15)',
                   borderRadius: 4,
                   color: isError
                     ? 'var(--color-redstone)'
                     : isHintLetter
-                      ? tierAccentColor
+                      ? colors.accent
                       : filled
                         ? '#FFF'
                         : 'transparent',
@@ -507,8 +646,9 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
           padding: '4px 0',
         }}
       >
-        {question.letters.map((letter, i) => {
+        {stageQuestion.letters.map((letter, i) => {
           const isUsed = usedIndices.has(i);
+          const isRejected = rejectLetter === i;
           return (
             <button
               key={i}
@@ -525,6 +665,8 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
                 opacity: isUsed ? 0.15 : 1,
                 cursor: isUsed || feedback ? 'default' : 'pointer',
                 transition: 'all 0.12s ease',
+                animation: isRejected ? 'blockShake 0.3s ease-out' : undefined,
+                color: isRejected ? 'var(--color-redstone)' : undefined,
               }}
             >
               {letter.toUpperCase()}
@@ -533,9 +675,8 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
         })}
       </div>
 
-      {/* Action buttons — different for green vs orange tier */}
+      {/* Action buttons */}
       <div className="flex" style={{ gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-        {/* Listen Again — always available */}
         <button
           className="btn btn-ghost"
           onClick={handleListenAgain}
@@ -545,8 +686,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
           🔊 Listen
         </button>
 
-        {/* Hint — only relevant in orange tier */}
-        {!hintUsed && (
+        {(stage === 2 || stage === 3) && !hintUsed && (
           <button
             className="btn btn-ghost"
             onClick={handleHint}
@@ -561,7 +701,6 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
           </button>
         )}
 
-        {/* Clear */}
         <button
           className="btn btn-ghost"
           onClick={handleClear}
@@ -572,7 +711,6 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
         </button>
       </div>
 
-      {/* Help text */}
       {slots.length < totalSlots && !feedback && (
         <div style={{ textAlign: 'center' }}>
           <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>

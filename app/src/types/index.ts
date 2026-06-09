@@ -95,6 +95,7 @@ export interface WordState {
 export type GameModeId =
   | 'diamond_mine'
   | 'crafting_table'
+  | 'echo_chamber'
   | 'ender_pearl'
   | 'redstone_quiz'
   | 'note_block'
@@ -149,10 +150,19 @@ export const GAME_MODES: GameModeMeta[] = [
     unlocked: true,
   },
   {
+    id: 'echo_chamber',
+    name: 'Echo Chamber',
+    nameZh: '回音密室',
+    description: 'Listen to letter-by-letter spelling and repeat — perfect for learning new words!',
+    icon: '🎤',
+    difficulty: 1,
+    unlocked: true,
+  },
+  {
     id: 'note_block',
     name: 'Note Block Studio',
     nameZh: '音符盒工作室',
-    description: 'Listen to the word and spell it — train your ears!',
+    description: '3-stage training: copy → assisted → independent. Build your listening-to-spelling skills step by step!',
     icon: '🎵',
     difficulty: 2,
     unlocked: true,
