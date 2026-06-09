@@ -387,7 +387,7 @@ export default function CraftingTable({ words, onAnswer, onComplete }: CraftingT
                 transition: 'all 0.12s ease',
               }}
             >
-              {letter.toUpperCase()}
+              {letter}
             </button>
           );
         })}

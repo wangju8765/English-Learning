@@ -39,7 +39,7 @@ export class NoteBlockEngine implements GameEngine {
   private maxCombo = 0;
 
   initialize(words: GameWord[]): void {
-    this.words = [...words].sort(() => Math.random() - 0.5);
+    this.words = [...words].slice(0, 6).sort(() => Math.random() - 0.5);
     this.wordIndex = 0;
     this.stage = 1;
     this.syllableRound = 0;

@@ -675,7 +675,7 @@ export default function NoteBlockStudio({ words, onAnswer, onComplete }: NoteBlo
                 color: isRejected ? 'var(--color-redstone)' : undefined,
               }}
             >
-              {letter.toUpperCase()}
+              {letter}
             </button>
           );
         })}

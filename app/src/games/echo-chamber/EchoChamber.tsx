@@ -519,7 +519,7 @@ export default function EchoChamber({ words, onAnswer, onComplete }: EchoChamber
                 transition: 'all 0.12s ease',
               }}
             >
-              {letter.toUpperCase()}
+              {letter}
             </button>
           );
         })}

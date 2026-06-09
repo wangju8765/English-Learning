@@ -517,7 +517,7 @@ export default function EnderPearlChallenge({ words, onAnswer, onComplete }: End
                 transition: 'all 0.12s ease',
               }}
             >
-              {letter.toUpperCase()}
+              {letter}
             </button>
           );
         })}
