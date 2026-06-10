@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "contentHash": "e2282d4e",
-  "generatedAt": "2026-06-10T01:30:44.486Z",
+  "contentHash": "53463d21",
+  "generatedAt": "2026-06-10T03:13:02.092Z",
   "entries": [
     {
       "id": "mac",
@@ -708,6 +708,329 @@
       ],
       "sourceDate": "2026-06-09",
       "parentNotes": "编程中常用来组织代码或数据的显示方式，比如 format the text（格式化文本）"
+    },
+    {
+      "id": "loop",
+      "word": "loop",
+      "phonetic": "/luːp/",
+      "partOfSpeech": "n./v.",
+      "definition": "循环；重复执行的一段代码；绕圈",
+      "exampleSentences": [
+        {
+          "english": "A loop repeats the same code many times.",
+          "chinese": "循环可以重复执行同一段代码很多次。"
+        },
+        {
+          "english": "Use a for loop to print numbers from 1 to 10.",
+          "chinese": "用 for 循环打印数字 1 到 10。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "编程中最基础的概念之一，for loop 和 while loop 是最常见的两种循环"
+    },
+    {
+      "id": "demo",
+      "word": "demo",
+      "phonetic": "/ˈdeməʊ/",
+      "partOfSpeech": "n.",
+      "definition": "演示；示范；展示版（demonstration 的缩写）",
+      "exampleSentences": [
+        {
+          "english": "Let me show you a demo of my game.",
+          "chinese": "让我给你演示一下我的游戏。"
+        },
+        {
+          "english": "You can try the demo version before buying.",
+          "chinese": "你可以在购买前试用演示版。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "编程中经常说 demo your program（演示你的程序），也可以指软件的试用版"
+    },
+    {
+      "id": "demonstrate",
+      "word": "demonstrate",
+      "phonetic": "/ˈdemənstreɪt/",
+      "partOfSpeech": "v.",
+      "definition": "演示；展示；证明",
+      "exampleSentences": [
+        {
+          "english": "The teacher asked me to demonstrate how the code works.",
+          "chinese": "老师让我演示这段代码是怎么运行的。"
+        },
+        {
+          "english": "Can you demonstrate your project to the class?",
+          "chinese": "你能向全班展示你的项目吗？"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "demo 就是从这个词缩写的，课堂上常说 demonstrate your work（展示你的作品）"
+    },
+    {
+      "id": "integer",
+      "word": "integer",
+      "phonetic": "/ˈɪntɪdʒər/",
+      "partOfSpeech": "n.",
+      "definition": "整数（编程中用于存储整数的变量类型，简写为 int）",
+      "exampleSentences": [
+        {
+          "english": "An integer is a whole number without a decimal point.",
+          "chinese": "整数是没有小数点的完整数字。"
+        },
+        {
+          "english": "In Java, int age = 10 means age is an integer.",
+          "chinese": "在 Java 中，int age = 10 表示 age 是一个整数。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "Java 中用 int 表示整数类型，比如 int score = 100; 整数就是没有小数点的数字"
+    },
+    {
+      "id": "while",
+      "word": "while",
+      "phonetic": "/waɪl/",
+      "partOfSpeech": "conj./n.",
+      "definition": "当……的时候；while 循环（编程中只要条件为真就重复执行）",
+      "exampleSentences": [
+        {
+          "english": "While I was coding, my cat sat next to me.",
+          "chinese": "我在写代码的时候，我的猫坐在我旁边。"
+        },
+        {
+          "english": "A while loop keeps running while the condition is true.",
+          "chinese": "while 循环在条件为真时一直运行。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "while loop 和 for loop 是编程中两种最重要的循环结构"
+    },
+    {
+      "id": "true",
+      "word": "true",
+      "phonetic": "/truː/",
+      "partOfSpeech": "adj./n.",
+      "definition": "真的；正确的；布尔值真（boolean true）",
+      "exampleSentences": [
+        {
+          "english": "Is it true that you finished your homework?",
+          "chinese": "你真的做完作业了吗？"
+        },
+        {
+          "english": "If the answer is true, the program will run this code.",
+          "chinese": "如果答案是 true，程序就会执行这段代码。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "编程中 true 和 false 是布尔类型的两个值，用来做判断"
+    },
+    {
+      "id": "false",
+      "word": "false",
+      "phonetic": "/fɔːls/",
+      "partOfSpeech": "adj./n.",
+      "definition": "假的；错误的；布尔值假（boolean false）",
+      "exampleSentences": [
+        {
+          "english": "The answer is false — try again.",
+          "chinese": "答案不对——再试一次。"
+        },
+        {
+          "english": "When the condition is false, the loop stops.",
+          "chinese": "当条件为 false 时，循环就停止了。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "和 true 一起构成编程中最基本的判断逻辑"
+    },
+    {
+      "id": "sum",
+      "word": "sum",
+      "phonetic": "/sʌm/",
+      "partOfSpeech": "n./v.",
+      "definition": "总和；求和；加法运算的结果",
+      "exampleSentences": [
+        {
+          "english": "The sum of three and five is eight.",
+          "chinese": "三加五的和是八。"
+        },
+        {
+          "english": "Write a program to find the sum of all numbers from 1 to 100.",
+          "chinese": "写一个程序来求 1 到 100 所有数字的总和。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "编程中经常需要计算 sum，比如求一组数字的总和"
+    },
+    {
+      "id": "public",
+      "word": "public",
+      "phonetic": "/ˈpʌblɪk/",
+      "partOfSpeech": "adj./n.",
+      "definition": "公共的；公开的；Java 中的访问修饰符，表示任何地方都可以访问",
+      "exampleSentences": [
+        {
+          "english": "The library is a public place for everyone.",
+          "chinese": "图书馆是对所有人开放的公共场所。"
+        },
+        {
+          "english": "In Java, public means other classes can use this method.",
+          "chinese": "在 Java 中，public 表示其他类可以使用这个方法。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "Java 程序中每个类的开头都有 public class，表示这个类是公开的"
+    },
+    {
+      "id": "static",
+      "word": "static",
+      "phonetic": "/ˈstætɪk/",
+      "partOfSpeech": "adj./n.",
+      "definition": "静态的；不变的；Java 关键字，表示属于类而不是某个对象",
+      "exampleSentences": [
+        {
+          "english": "The picture on the screen is static — it does not move.",
+          "chinese": "屏幕上的画面是静态的——它不动的。"
+        },
+        {
+          "english": "In Java, static methods belong to the class, not to an object.",
+          "chinese": "在 Java 中，static 方法属于类，不属于某个对象。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "Java 的 main 方法必须是 public static void main — 这是每个程序入口的固定写法"
+    },
+    {
+      "id": "guess",
+      "word": "guess",
+      "phonetic": "/ɡes/",
+      "partOfSpeech": "v./n.",
+      "definition": "猜测；猜想（编程中常见于猜数字游戏）",
+      "exampleSentences": [
+        {
+          "english": "Can you guess how many candies are in the jar?",
+          "chinese": "你能猜到罐子里有多少颗糖吗？"
+        },
+        {
+          "english": "The guessing game lets you guess a secret number.",
+          "chinese": "猜数字游戏让你猜一个秘密数字。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "编程入门常做的 guess the number 游戏，玩家猜一个数字，程序告诉你是大了还是小了"
+    },
+    {
+      "id": "number",
+      "word": "number",
+      "phonetic": "/ˈnʌmbər/",
+      "partOfSpeech": "n.",
+      "definition": "数字；号码；数量",
+      "exampleSentences": [
+        {
+          "english": "What is your favorite number?",
+          "chinese": "你最喜欢的数字是什么？"
+        },
+        {
+          "english": "The program asks you to enter a number.",
+          "chinese": "这个程序让你输入一个数字。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "编程中最基本的概念之一，几乎每行代码都在处理数字"
+    },
+    {
+      "id": "math",
+      "word": "Math",
+      "phonetic": "/mæθ/",
+      "partOfSpeech": "n.",
+      "definition": "数学（mathematics 的缩写）；Java 中的 Math 工具类，提供数学计算方法",
+      "exampleSentences": [
+        {
+          "english": "I like Math class at school.",
+          "chinese": "我喜欢学校的数学课。"
+        },
+        {
+          "english": "Use Math.random() in Java to get a random number.",
+          "chinese": "在 Java 中用 Math.random() 来获取一个随机数。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "Java 中用 Math.random() 生成随机数，Math.max() 找最大值——这是个非常常用的工具类"
+    },
+    {
+      "id": "mathematics",
+      "word": "Mathematics",
+      "phonetic": "/ˌmæθəˈmætɪks/",
+      "partOfSpeech": "n.",
+      "definition": "数学（全称，Math 是它的缩写）",
+      "exampleSentences": [
+        {
+          "english": "Mathematics is the study of numbers and shapes.",
+          "chinese": "数学是研究数字和形状的学科。"
+        },
+        {
+          "english": "Computers are built on the principles of mathematics.",
+          "chinese": "计算机是建立在数学原理之上的。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "日常生活中常用缩写 Math，正式场合用 Mathematics"
+    },
+    {
+      "id": "random",
+      "word": "random",
+      "phonetic": "/ˈrændəm/",
+      "partOfSpeech": "adj./n.",
+      "definition": "随机的；任意的；编程中常用于生成随机数",
+      "exampleSentences": [
+        {
+          "english": "Pick a random card from the deck.",
+          "chinese": "从牌堆里随机抽一张牌。"
+        },
+        {
+          "english": "The game uses random numbers to make it different every time.",
+          "chinese": "游戏用随机数来让每次都不一样。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "Java 中 Math.random() 生成 0 到 1 之间的随机小数，游戏开发中经常用到"
+    },
+    {
+      "id": "class",
+      "word": "class",
+      "phonetic": "/klɑːs/",
+      "partOfSpeech": "n.",
+      "definition": "班级；课堂；类（Java 编程中定义对象的蓝图）",
+      "exampleSentences": [
+        {
+          "english": "There are twenty students in my class.",
+          "chinese": "我的班上有二十个学生。"
+        },
+        {
+          "english": "In Java, every program starts with a class.",
+          "chinese": "在 Java 中，每个程序都从一个类开始。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "Java 中最核心的概念——每个程序都由 class 组成。同时也表示学校的班级"
+    },
+    {
+      "id": "break",
+      "word": "break",
+      "phonetic": "/breɪk/",
+      "partOfSpeech": "v./n.",
+      "definition": "打破；中断；休息；break 语句（编程中跳出循环）",
+      "exampleSentences": [
+        {
+          "english": "Let's take a 5-minute break.",
+          "chinese": "我们休息五分钟吧。"
+        },
+        {
+          "english": "Use break to exit a loop when you find what you need.",
+          "chinese": "当你找到需要的东西时，用 break 退出循环。"
+        }
+      ],
+      "sourceDate": "2026-06-10",
+      "parentNotes": "编程中 break 用来提前退出循环。平时可以说 take a break（休息一下）"
     }
   ]
 }
