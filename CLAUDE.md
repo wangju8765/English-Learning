@@ -103,13 +103,17 @@ app/
   识别：⛏️ Diamond Mine（词义辨认）
   挑战：🎯 Ender Pearl（限时拼词）
   应用：🔴 Redstone Quiz（句子语境）
-  BOSS：🌑 Nether Portal（当日完成全部 6 个常规模式后解锁）
+  BOSS：🌑 Nether Portal（当日完成全部 6 个常规模式后解锁，每日限玩一次）
 ```
 
-**解锁机制**：常规模式始终可用。Nether Portal 需当日完成全部 6 个常规模式（`isPortalUnlocked(completedModesToday)`）。
+**解锁机制**：常规模式始终可用。Nether Portal 需当日完成全部 6 个常规模式（`isPortalUnlocked(completedModesToday)`），每日仅可挑战一次。
 **词汇路由**：`selectWordsForMode` 按 mastery 范围分配（Echo=新词 mastery0, Crafting=练习词 1-2, Nether=已掌握词 3-5）。
 **每日任务**：完成 3 个不同模式 = +50 XP（`DAILY_QUEST_TARGET = 3`）。
 **学习看板**：HomePage 显示今日进度 + Portal 解锁进度条 + 熟练度分布 + 推荐。
+
+### Mastery 升级规则（v2，2026-06-10）
+
+识别类模式（Diamond Mine / Redstone Quiz / Echo Chamber / Note Block）答对最多升至 Gold(3)。只有拼写类模式（Crafting Table / Ender Pearl / Nether Portal）答对才能突破到 Diamond(4) 和 Netherite(5)。拼写类答错扣 2 级——确保 mastery 反映真实的拼写能力，而非多选蒙对。详见 [[game-design]]。
 
 ## 游戏模式（7/7 全部实现）
 
