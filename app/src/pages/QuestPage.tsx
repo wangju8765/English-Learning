@@ -29,7 +29,7 @@ export default function QuestPage() {
 
   const regularModes = getRegularModes();
   const portalMode = getPortalMode();
-  const portalUnlocked = isPortalUnlocked(streakDays, completedCount);
+  const portalUnlocked = isPortalUnlocked(completedCount);
 
   const handleStartGame = (mode: GameModeMeta) => {
     const words = selectWordsForMode(allWords, state.settings.dailyWordTarget, mode.id);
@@ -137,7 +137,6 @@ export default function QuestPage() {
             <PortalCard
               mode={portalMode}
               unlocked={portalUnlocked}
-              streakDays={streakDays}
               completedToday={completedCount}
               onStart={() => handleStartGame(portalMode)}
             />
@@ -203,18 +202,16 @@ function GameModeCard({
 function PortalCard({
   mode,
   unlocked,
-  streakDays,
   completedToday,
   onStart,
 }: {
   mode: GameModeMeta;
   unlocked: boolean;
-  streakDays: number;
   completedToday: number;
   onStart: () => void;
 }) {
-  const streakMet = streakDays >= 6;
-  const dailyMet = completedToday >= 3;
+  const required = getRegularModes().length; // 6
+  const dailyMet = completedToday >= required;
 
   return (
     <button
@@ -245,13 +242,10 @@ function PortalCard({
           <span style={{ fontSize: 10 }}>⭐⭐⭐</span>
         </div>
         <p style={{ color: '#AAA', fontSize: 11 }}>{mode.description}</p>
-        {/* Unlock conditions */}
-        <div style={{ marginTop: 6, display: 'flex', gap: 12, fontSize: 10 }}>
-          <span style={{ color: streakMet ? '#80FF20' : '#666' }}>
-            {streakMet ? '✅' : '⬜'} {streakDays}/6 Day Streak
-          </span>
+        {/* Unlock condition */}
+        <div style={{ marginTop: 6, fontSize: 10 }}>
           <span style={{ color: dailyMet ? '#80FF20' : '#666' }}>
-            {dailyMet ? '✅' : '⬜'} {completedToday}/3 Today
+            {dailyMet ? '✅' : '⬜'} 完成所有 {required} 个常规模式 ({completedToday}/{required})
           </span>
         </div>
       </div>

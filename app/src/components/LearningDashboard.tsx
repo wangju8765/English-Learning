@@ -5,8 +5,6 @@ import { useMemo } from 'react';
 import {
   getRegularModes,
   isPortalUnlocked,
-  PORTAL_STREAK_REQUIRED,
-  PORTAL_DAILY_MODES_REQUIRED,
   XP_CONFIG,
   type MasteryLevel,
 } from '../types';
@@ -14,19 +12,18 @@ import { getMasteryDistribution } from '../services/spaced-repetition';
 import type { WordState, SessionRecord } from '../types';
 
 interface LearningDashboardProps {
-  streakDays: number;
   allWords: WordState[];
   todaySessions: SessionRecord[];
 }
 
-export default function LearningDashboard({ streakDays, allWords, todaySessions }: LearningDashboardProps) {
+export default function LearningDashboard({ allWords, todaySessions }: LearningDashboardProps) {
   const today = new Date().toISOString().slice(0, 10);
   const completedToday = new Set(
     todaySessions.filter((s) => s.date === today && s.completed).map((s) => s.gameMode)
   );
   const completedCount = completedToday.size;
 
-  const portalUnlocked = isPortalUnlocked(streakDays, completedCount);
+  const portalUnlocked = isPortalUnlocked(completedCount);
   const regularModes = getRegularModes();
   const distribution = getMasteryDistribution(allWords);
   const totalWords = allWords.length;
@@ -120,7 +117,7 @@ export default function LearningDashboard({ streakDays, allWords, todaySessions 
             </span>
             {!portalUnlocked && (
               <p style={{ color: '#666', fontSize: 10, marginTop: 2 }}>
-                Complete both conditions to unlock the boss fight
+                Complete all {regularModes.length} regular modes today to unlock
               </p>
             )}
           </div>
@@ -131,44 +128,22 @@ export default function LearningDashboard({ streakDays, allWords, todaySessions 
           )}
         </div>
 
-        {/* Two progress bars */}
+        {/* Portal progress bar */}
         <div className="flex-col" style={{ gap: 6 }}>
-          {/* Streak bar */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
               <span style={{ fontSize: 10, color: '#888' }}>
-                🔥 Streak ({streakDays}/{PORTAL_STREAK_REQUIRED} days)
+                📋 Portal Progress ({completedCount}/{regularModes.length} modes)
               </span>
-              <span style={{ fontSize: 9, color: streakDays >= PORTAL_STREAK_REQUIRED ? '#80FF20' : '#666' }}>
-                {streakDays >= PORTAL_STREAK_REQUIRED ? '✅' : `${PORTAL_STREAK_REQUIRED - streakDays}d left`}
+              <span style={{ fontSize: 9, color: portalUnlocked ? '#80FF20' : '#666' }}>
+                {portalUnlocked ? '✅' : `${regularModes.length - completedCount} left`}
               </span>
             </div>
             <div className="progress-bar" style={{ height: 6 }}>
               <div
                 className="progress-bar-fill"
                 style={{
-                  width: `${Math.min((streakDays / PORTAL_STREAK_REQUIRED) * 100, 100)}%`,
-                  background: 'linear-gradient(90deg, #FF8C00, #FFA500)',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Daily bar */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-              <span style={{ fontSize: 10, color: '#888' }}>
-                📋 Today ({completedCount}/{PORTAL_DAILY_MODES_REQUIRED} modes)
-              </span>
-              <span style={{ fontSize: 9, color: completedCount >= PORTAL_DAILY_MODES_REQUIRED ? '#80FF20' : '#666' }}>
-                {completedCount >= PORTAL_DAILY_MODES_REQUIRED ? '✅' : `${PORTAL_DAILY_MODES_REQUIRED - completedCount} left`}
-              </span>
-            </div>
-            <div className="progress-bar" style={{ height: 6 }}>
-              <div
-                className="progress-bar-fill"
-                style={{
-                  width: `${Math.min((completedCount / PORTAL_DAILY_MODES_REQUIRED) * 100, 100)}%`,
+                  width: `${Math.min((completedCount / regularModes.length) * 100, 100)}%`,
                   background: 'linear-gradient(90deg, #7C3AED, #A78BFA)',
                 }}
               />

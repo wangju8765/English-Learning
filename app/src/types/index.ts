@@ -171,7 +171,7 @@ export const GAME_MODES: GameModeMeta[] = [
     id: 'nether_portal',
     name: 'Nether Portal Escape',
     nameZh: '下界传送门逃脱',
-    description: 'Boss level — prove you have mastered this week\'s words! Requires 6-day streak + 3 modes completed today.',
+    description: 'Boss level — prove you\'ve mastered all skills today! Complete all 6 regular modes to unlock.',
     icon: '🌑',
     difficulty: 3,
     unlocked: false,
@@ -189,18 +189,15 @@ export function getPortalMode(): GameModeMeta {
   return GAME_MODES.find((m) => m.id === 'nether_portal')!;
 }
 
-/** Portal requirements */
-export const PORTAL_STREAK_REQUIRED = 6;
-export const PORTAL_DAILY_MODES_REQUIRED = 3;
+/** Portal requirements — complete all 6 regular modes in a day to unlock the boss */
+export const PORTAL_DAILY_MODES_REQUIRED = 6; // Same as getRegularModes().length
 
 /**
- * Nether Portal unlocks when the player has:
- * 1. A streak of at least 6 consecutive days, AND
- * 2. Completed 3+ different game modes today
- * This ensures it's a reward for consistent daily effort, not just calendar time.
+ * Nether Portal unlocks when the player has completed all 6 regular game modes today.
+ * It's the daily boss fight — prove you've practiced every skill before the final challenge.
  */
-export function isPortalUnlocked(streakDays: number, completedModesToday: number): boolean {
-  return streakDays >= PORTAL_STREAK_REQUIRED && completedModesToday >= PORTAL_DAILY_MODES_REQUIRED;
+export function isPortalUnlocked(completedModesToday: number): boolean {
+  return completedModesToday >= PORTAL_DAILY_MODES_REQUIRED;
 }
 
 // --- Game Engine ---

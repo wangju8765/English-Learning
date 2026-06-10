@@ -91,7 +91,6 @@ export default function HomePage() {
 
       {/* Learning Journey Dashboard */}
       <LearningDashboard
-        streakDays={state.player.streakDays}
         allWords={allWords}
         todaySessions={todaySessions}
       />
