@@ -86,12 +86,12 @@ app/
   scripts/
     parse-vocabulary.ts  ← md → JSON 解析器
   public/data/
-    vocabulary.json   ← 解析生成的词汇数据（自动生成，38 个词条）
+    vocabulary.json   ← 解析生成的词汇数据（自动生成，55 个词条）
 .github/workflows/
   deploy.yml          ← CI/CD 自动部署
 ```
 
-## 学习路径（2026-06-09 重构 v2）
+## 学习路径（2026-06-10 更新 v3）
 
 **所有 6 个常规模式从 Day 1 起每天可用**，鼓励充分的学习时间。通过 mastery 范围路由确保词难度匹配。
 
@@ -103,15 +103,15 @@ app/
   识别：⛏️ Diamond Mine（词义辨认）
   挑战：🎯 Ender Pearl（限时拼词）
   应用：🔴 Redstone Quiz（句子语境）
-  BOSS：🌑 Nether Portal（需 streak≥6 + 今日完成≥3 模式解锁）
+  BOSS：🌑 Nether Portal（当日完成全部 6 个常规模式后解锁）
 ```
 
-**解锁机制**：常规模式始终可用。Nether Portal 需满足 `streakDays ≥ 6 AND 今日完成 ≥ 3 个模式`。
+**解锁机制**：常规模式始终可用。Nether Portal 需当日完成全部 6 个常规模式（`isPortalUnlocked(completedModesToday)`）。
 **词汇路由**：`selectWordsForMode` 按 mastery 范围分配（Echo=新词 mastery0, Crafting=练习词 1-2, Nether=已掌握词 3-5）。
 **每日任务**：完成 3 个不同模式 = +50 XP（`DAILY_QUEST_TARGET = 3`）。
-**学习看板**：HomePage 显示今日进度 + Portal 解锁条件双进度条 + 熟练度分布 + 推荐。
+**学习看板**：HomePage 显示今日进度 + Portal 解锁进度条 + 熟练度分布 + 推荐。
 
-## 游戏模式（6/7 已实现）
+## 游戏模式（7/7 全部实现）
 
 ### ⛏️ Diamond Mine（钻石矿工）
 - 词义识别 — 3×3 矿墙，9 块砖中寻找对应中文释义的英文词（每面 2 个目标，最多 5 面墙）
@@ -144,8 +144,10 @@ app/
 - 同一词走完三步才进入下一个，词量限制 6 个
 - 难度 ⭐⭐
 
-### 规划中
-- 🌑 Nether Portal Escape（下界传送门逃脱）— 综合 BOSS 关
+### 🌑 Nether Portal Escape（下界传送门逃脱）
+- 综合 BOSS 关 — 三阶段战斗：收集黑曜石(词义识别) → 搭建门框(计时拼写) → 点燃传送门(能量条混合模式)
+- 当日完成全部 6 个常规模式后解锁，每日可挑战
+- 难度 ⭐⭐⭐
 
 ## 语音交互模式
 
