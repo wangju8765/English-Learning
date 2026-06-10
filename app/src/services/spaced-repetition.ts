@@ -19,6 +19,30 @@ export const MASTERY_RANGE: Record<GameModeId, { min: MasteryLevel; max: Mastery
   nether_portal:  { min: 3, max: 5 },  // Mastered words — boss check
 };
 
+// --- Mastery Impact Weighting ---
+// Recognition modes (multiple-choice or heavily scaffolded) cannot push a word
+// beyond Gold (3). Only free-recall spelling modes can unlock Diamond/Netherite.
+// Spelling mistakes in recall modes cost double — if you can't spell it from
+// memory, you don't really know it.
+
+/** Modes where the answer is scaffolded: multiple choice, letter-by-letter guide, or template shown */
+const RECOGNITION_MODES: Set<string> = new Set([
+  'diamond_mine',
+  'redstone_quiz',
+  'echo_chamber',
+  'note_block',
+]);
+
+/** Modes where the child must produce the spelling from memory — the real test */
+const RECALL_MODES: Set<string> = new Set([
+  'crafting_table',
+  'ender_pearl',
+  'nether_portal',
+]);
+
+/** Recognition modes can never push mastery beyond this level */
+const RECOGNITION_MASTERY_CAP: MasteryLevel = 3; // Gold
+
 export function processAnswer(
   word: WordState,
   correct: boolean,
@@ -33,13 +57,36 @@ export function processAnswer(
     updated.totalCorrect += 1;
   }
 
-  // Update mastery level
+  const isRecognition = RECOGNITION_MODES.has(gameMode);
+  const isRecall = RECALL_MODES.has(gameMode);
+
+  // Update mastery level with mode-dependent weighting
   if (correct) {
-    updated.masteryLevel = Math.min(word.masteryLevel + 1, 5) as MasteryLevel;
+    const rawLevel = word.masteryLevel + 1;
+    if (isRecognition) {
+      // Recognition can build familiarity but can't prove spelling ability.
+      // Cap at Gold — to reach Diamond/Netherite, the child must spell correctly
+      // in a free-recall mode (Crafting Table, Ender Pearl, Nether Portal).
+      updated.masteryLevel = Math.min(rawLevel, RECOGNITION_MASTERY_CAP) as MasteryLevel;
+    } else if (isRecall) {
+      // Free recall is the real proof of mastery. No cap.
+      updated.masteryLevel = Math.min(rawLevel, 5) as MasteryLevel;
+    } else {
+      // Unknown mode — default to uncapped (safety)
+      updated.masteryLevel = Math.min(rawLevel, 5) as MasteryLevel;
+    }
     updated.easeFactor = Math.min(word.easeFactor + 0.15, 2.5);
     updated.consecutiveCorrect += 1;
   } else {
-    updated.masteryLevel = Math.max(word.masteryLevel - 1, 0) as MasteryLevel;
+    // Wrong answer — penalty depends on mode type
+    if (isRecall) {
+      // Spelling mistakes in free recall are significant.
+      // If the child can't spell the word from memory, they haven't mastered it.
+      updated.masteryLevel = Math.max(word.masteryLevel - 2, 0) as MasteryLevel;
+    } else {
+      // Recognition mistakes are less severe — maybe just didn't recognize it today.
+      updated.masteryLevel = Math.max(word.masteryLevel - 1, 0) as MasteryLevel;
+    }
     updated.easeFactor = Math.max(word.easeFactor - 0.2, 1.3);
     updated.consecutiveCorrect = 0;
   }
