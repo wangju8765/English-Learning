@@ -158,3 +158,31 @@ export function playXpGain(): void {
 export function playBeep(): void {
   playTone('square', 800, 0.12, 0.06, 600);
 }
+
+// --- Portal (Nether Portal Escape) sounds ---
+
+/** Low ambient hum for portal presence */
+export function playPortalHum(): void {
+  playTone('sine', 80, 0.5, 0.06, 60);
+  setTimeout(() => {
+    playTone('sine', 100, 0.4, 0.04, 70);
+  }, 100);
+}
+
+/** Rising pitch sequence — portal activates! */
+export function playPortalActivate(): void {
+  playSequence([
+    { freq: 80, delay: 0, duration: 0.2 },
+    { freq: 160, delay: 0.15, duration: 0.2 },
+    { freq: 320, delay: 0.3, duration: 0.25 },
+    { freq: 640, delay: 0.45, duration: 0.35 },
+  ], 'sine', 0.1);
+}
+
+/** Descending tone — portal collapses */
+export function playPortalFail(): void {
+  playTone('sawtooth', 200, 0.3, 0.08, 60);
+  setTimeout(() => {
+    playTone('triangle', 100, 0.25, 0.06, 40);
+  }, 150);
+}

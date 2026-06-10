@@ -11,6 +11,7 @@ import EnderPearlChallenge from '../games/ender-pearl/EnderPearlChallenge';
 import RedstoneQuiz from '../games/redstone-quiz/RedstoneQuiz';
 import NoteBlockStudio from '../games/note-block/NoteBlockStudio';
 import EchoChamber from '../games/echo-chamber/EchoChamber';
+import NetherPortalEscape from '../games/nether-portal/NetherPortalEscape';
 
 export default function GamePage() {
   const { modeId } = useParams<{ modeId: string }>();
@@ -192,7 +193,15 @@ export default function GamePage() {
         />
       )}
 
-      {gameMode !== 'diamond_mine' && gameMode !== 'crafting_table' && gameMode !== 'ender_pearl' && gameMode !== 'redstone_quiz' && gameMode !== 'note_block' && gameMode !== 'echo_chamber' && (
+      {gameMode === 'nether_portal' && (
+        <NetherPortalEscape
+          words={words}
+          onAnswer={handleAnswer}
+          onComplete={handleComplete}
+        />
+      )}
+
+      {gameMode !== 'diamond_mine' && gameMode !== 'crafting_table' && gameMode !== 'ender_pearl' && gameMode !== 'redstone_quiz' && gameMode !== 'note_block' && gameMode !== 'echo_chamber' && gameMode !== 'nether_portal' && (
         <div className="flex-center" style={{ height: 200, padding: 24 }}>
           <div className="mc-panel" style={{ padding: 24, textAlign: 'center' }}>
             <span style={{ fontSize: 48 }}>🚧</span>
