@@ -30,8 +30,13 @@ export default function QuestPage() {
   const regularModes = getRegularModes();
   const portalMode = getPortalMode();
   const portalUnlocked = isPortalUnlocked(completedCount);
+  const portalCompleted = completedModes.has('nether_portal');
 
   const handleStartGame = (mode: GameModeMeta) => {
+    // Portal: once per day
+    if (mode.id === 'nether_portal' && portalCompleted) {
+      return;
+    }
     const words = selectWordsForMode(allWords, state.settings.dailyWordTarget, mode.id);
     if (words.length === 0) {
       alert('No words to review! Add some vocabulary first.');
@@ -132,12 +137,13 @@ export default function QuestPage() {
           {/* Nether Portal — special unlock conditions */}
           <div>
             <p className="pixel-text-sm" style={{ color: '#666', fontSize: 9, marginBottom: 8 }}>
-              🌑 Boss Level {portalUnlocked ? '— UNLOCKED!' : '— locked'}
+              🌑 Boss Level {portalCompleted ? '— ✅ Conquered Today!' : portalUnlocked ? '— UNLOCKED!' : '— locked'}
             </p>
             <PortalCard
               mode={portalMode}
-              unlocked={portalUnlocked}
+              unlocked={portalUnlocked && !portalCompleted}
               completedToday={completedCount}
+              alreadyCompleted={portalCompleted}
               onStart={() => handleStartGame(portalMode)}
             />
           </div>
@@ -203,11 +209,13 @@ function PortalCard({
   mode,
   unlocked,
   completedToday,
+  alreadyCompleted,
   onStart,
 }: {
   mode: GameModeMeta;
   unlocked: boolean;
   completedToday: number;
+  alreadyCompleted: boolean;
   onStart: () => void;
 }) {
   const required = getRegularModes().length; // 6
@@ -224,33 +232,47 @@ function PortalCard({
         gap: 12,
         padding: 12,
         cursor: unlocked ? 'pointer' : 'not-allowed',
-        opacity: unlocked ? 1 : 0.5,
+        opacity: alreadyCompleted ? 0.7 : unlocked ? 1 : 0.5,
         textAlign: 'left',
         width: '100%',
-        background: unlocked
-          ? 'linear-gradient(135deg, rgba(128,0,128,0.15), rgba(75,0,130,0.1))'
-          : undefined,
-        border: unlocked ? '2px solid rgba(147,51,234,0.5)' : undefined,
+        background: alreadyCompleted
+          ? '#2A2A3A'
+          : unlocked
+            ? 'linear-gradient(135deg, rgba(128,0,128,0.15), rgba(75,0,130,0.1))'
+            : undefined,
+        border: alreadyCompleted
+          ? '2px solid #F5A623'
+          : unlocked
+            ? '2px solid rgba(147,51,234,0.5)'
+            : undefined,
       }}
     >
       <span style={{ fontSize: 36 }}>{mode.icon}</span>
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span className="pixel-text-sm" style={{ color: unlocked ? '#C084FC' : '#888', fontSize: 10 }}>
+          <span className="pixel-text-sm" style={{ color: alreadyCompleted ? '#F5A623' : unlocked ? '#C084FC' : '#888', fontSize: 10 }}>
             {mode.name}
           </span>
           <span style={{ fontSize: 10 }}>⭐⭐⭐</span>
         </div>
         <p style={{ color: '#AAA', fontSize: 11 }}>{mode.description}</p>
-        {/* Unlock condition */}
+        {/* Status */}
         <div style={{ marginTop: 6, fontSize: 10 }}>
-          <span style={{ color: dailyMet ? '#80FF20' : '#666' }}>
-            {dailyMet ? '✅' : '⬜'} 完成所有 {required} 个常规模式 ({completedToday}/{required})
-          </span>
+          {alreadyCompleted ? (
+            <span style={{ color: '#F5A623' }}>🏆 今日已征服 — 明天再来！</span>
+          ) : (
+            <span style={{ color: dailyMet ? '#80FF20' : '#666' }}>
+              {dailyMet ? '✅' : '⬜'} 完成所有 {required} 个常规模式 ({completedToday}/{required})
+            </span>
+          )}
         </div>
       </div>
       <div>
-        {unlocked ? (
+        {alreadyCompleted ? (
+          <span className="pixel-text-sm" style={{ color: '#F5A623', fontSize: 9 }}>
+            ✅ Done
+          </span>
+        ) : unlocked ? (
           <span className="btn btn-primary" style={{ fontSize: 8, padding: '4px 8px', background: '#7C3AED' }}>
             ⚔️ FIGHT
           </span>
